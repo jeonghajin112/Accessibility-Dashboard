@@ -21,25 +21,32 @@ export function BridgeLogo() {
   const { open, animate } = useSidebar();
 
   return (
-    <div className="flex min-h-[42px] items-center gap-2 overflow-hidden rounded-full p-2">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#111111] text-[11px] font-black tracking-tight text-white"
-      >
-        UA
-      </motion.div>
-      <motion.p
+    <div className="flex min-h-[42px] items-center overflow-hidden rounded-full p-2">
+      <motion.svg
         animate={{
           opacity: animate ? (open ? 1 : 0) : 1,
           x: animate ? (open ? 0 : -8) : 0,
           maxWidth: animate ? (open ? 180 : 0) : 180
         }}
         transition={{ duration: 0.15, ease: "easeOut" }}
-        className="dashboard-sidebar-brand overflow-hidden whitespace-nowrap text-sm font-black tracking-[0.08em] text-slate-900"
+        className="dashboard-sidebar-wordmark overflow-hidden text-slate-900"
+        viewBox="-8 -4 178 38"
+        role="img"
+        aria-label="UNIACCESS"
       >
-        UNI Access
-      </motion.p>
+        <text
+          x="2"
+          y="25"
+          fill="currentColor"
+          fontFamily="Impact, 'Arial Black', system-ui, sans-serif"
+          fontSize="25"
+          fontWeight="900"
+          letterSpacing="-0.8"
+          transform="skewX(-7)"
+        >
+          UNIACCESS
+        </text>
+      </motion.svg>
     </div>
   );
 }

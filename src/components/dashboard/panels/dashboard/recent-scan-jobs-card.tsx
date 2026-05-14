@@ -31,16 +31,16 @@ export type RecentScanRow = {
   siteId: number;
   site: string;
   status: ScanStatus;
-  total_score: number | null;
-  updated_at: string;
+  totalScore: number | null;
+  updatedAt: string;
 };
 
 export function buildRecentScanRows(data: DashboardViewModel): RecentScanRow[] {
-  const scoreByEvaluationRequestId = new Map(data.score_results.map((score) => [score.evaluation_request_id, score]));
+  const scoreByEvaluationRequestId = new Map(data.scoreResults.map((score) => [score.evaluationRequestId, score]));
   const targetSiteLookup = new Map<number, { projectId: number; projectName: string; siteId: number; siteName: string }>();
 
   for (const project of data.organizations) {
-    for (const targetSite of project.evaluation_targets) {
+    for (const targetSite of project.evaluationTargets) {
       targetSiteLookup.set(targetSite.id, {
         projectId: project.id,
         projectName: project.name,
@@ -50,25 +50,25 @@ export function buildRecentScanRows(data: DashboardViewModel): RecentScanRow[] {
     }
   }
 
-  return [...data.evaluation_requests]
+  return [...data.evaluationRequests]
     .sort((a, b) => {
-      const left = Date.parse(a.updated_at);
-      const right = Date.parse(b.updated_at);
+      const left = Date.parse(a.updatedAt);
+      const right = Date.parse(b.updatedAt);
       return right - left;
     })
     .map((scanJob) => {
       const score = scoreByEvaluationRequestId.get(scanJob.id);
-      const siteInfo = targetSiteLookup.get(scanJob.evaluation_target_id);
+      const siteInfo = targetSiteLookup.get(scanJob.evaluationTargetId);
 
       return {
         id: scanJob.id,
         projectId: siteInfo?.projectId ?? null,
         project: siteInfo?.projectName ?? "알 수 없는 프로젝트",
-        siteId: siteInfo?.siteId ?? scanJob.evaluation_target_id,
-        site: siteInfo?.siteName ?? `site#${scanJob.evaluation_target_id}`,
+        siteId: siteInfo?.siteId ?? scanJob.evaluationTargetId,
+        site: siteInfo?.siteName ?? `site#${scanJob.evaluationTargetId}`,
         status: mapScanStatus(scanJob.status),
-        total_score: score?.total_score ?? null,
-        updated_at: scanJob.updated_at
+        totalScore: score?.totalScore ?? null,
+        updatedAt: scanJob.updatedAt
       };
     });
 }
@@ -110,8 +110,8 @@ export function RecentScanJobsCard({
   };
 
   return (
-    <article className="dashboard-card flex min-h-[300px] flex-col rounded-xl border border-slate-200 bg-white px-4 py-3 xl:min-h-0 xl:self-stretch">
-      <div className="mb-3 min-w-0">
+    <article className="dashboard-card flex min-h-[300px] flex-col rounded-xl border border-slate-200 bg-white px-4 pt-4 pb-3 xl:min-h-0 xl:self-stretch">
+      <div className="mb-3 min-w-0 pl-2">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-slate-900">최근 스캔 작업</p>
         </div>
@@ -184,13 +184,13 @@ export function RecentScanJobsCard({
                     <div className="mt-3 flex items-end justify-between gap-3">
                       <p
                         className="min-w-0 truncate text-xs font-medium"
-                        title={formatDateTime(row.updated_at)}
+                        title={formatDateTime(row.updatedAt)}
                         style={{ color: "#64748b" }}
                       >
-                        {formatDateTime(row.updated_at)}
+                        {formatDateTime(row.updatedAt)}
                       </p>
                       <p className="shrink-0 text-sm font-bold text-slate-900">
-                        {row.total_score !== null ? `${row.total_score}점` : "-"}
+                        {row.totalScore !== null ? `${row.totalScore}점` : "-"}
                       </p>
                     </div>
                   </div>

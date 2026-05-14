@@ -62,10 +62,12 @@ export function toMonthKey(value: string): string {
 }
 
 export function mapScanStatus(status: string): ScanStatus {
-  if (status === "finished" || status === "completed" || status === "success") {
+  const normalizedStatus = status.trim().toLowerCase();
+
+  if (normalizedStatus === "finished" || normalizedStatus === "completed" || normalizedStatus === "success") {
     return "완료";
   }
-  if (status === "failed" || status === "error" || status === "cancelled") {
+  if (normalizedStatus === "failed" || normalizedStatus === "error" || normalizedStatus === "cancelled") {
     return "실패";
   }
   return "진행중";

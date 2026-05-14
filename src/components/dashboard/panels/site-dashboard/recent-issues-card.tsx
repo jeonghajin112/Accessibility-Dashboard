@@ -36,7 +36,7 @@ export function RecentIssuesCard({ rows, dateLabel }: RecentIssuesCardProps) {
                     {severity.label}
                   </span>
                   <span className="truncate rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
-                    {issue.issue_code}
+                    {issue.issueCode}
                   </span>
                   <span className="truncate rounded-full bg-slate-950 px-2 py-1 text-[11px] font-bold text-white">
                     WCAG {wcagCriterion.criterion}
@@ -45,15 +45,15 @@ export function RecentIssuesCard({ rows, dateLabel }: RecentIssuesCardProps) {
                     {analyzerLabel}
                   </span>
                 </div>
-                <p className="mt-2 truncate text-sm font-bold text-slate-950" title={issue.issue_title}>
-                  {issue.issue_title}
+                <p className="mt-2 truncate text-sm font-bold text-slate-950" title={issue.issueTitle}>
+                  {issue.issueTitle}
                 </p>
                 <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{issue.message}</p>
-                {issue.location_path && (
+                {issue.locationPath && (
                   <div className="mt-2 rounded-lg bg-slate-50 px-2 py-2">
                     <p className="text-[10px] font-bold text-slate-400">문제 위치</p>
-                    <p className="mt-1 truncate font-mono text-[11px] leading-4 text-slate-600" title={issue.location_path}>
-                      {issue.location_path}
+                    <p className="mt-1 truncate font-mono text-[11px] leading-4 text-slate-600" title={issue.locationPath}>
+                      {issue.locationPath}
                     </p>
                   </div>
                 )}
@@ -76,13 +76,13 @@ export function RecentIssuesCard({ rows, dateLabel }: RecentIssuesCardProps) {
                       {issueGuides.map((guide) => (
                         <div key={guide.id} className="rounded-lg bg-white px-2 py-2">
                           <p className="text-xs font-bold text-slate-900">{guide.title}</p>
-                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{guide.guide_content}</p>
+                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{guide.guideContent}</p>
                           {guide.recommendation && (
                             <p className="mt-2 text-[11px] font-medium leading-4 text-slate-600">{guide.recommendation}</p>
                           )}
-                          {guide.example_code && (
+                          {guide.exampleCode && (
                             <pre className="mt-2 max-h-16 overflow-auto rounded-lg bg-slate-950 px-2 py-2 text-[10px] leading-4 text-white">
-                              <code>{guide.example_code}</code>
+                              <code>{guide.exampleCode}</code>
                             </pre>
                           )}
                         </div>

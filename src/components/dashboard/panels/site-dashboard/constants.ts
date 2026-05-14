@@ -21,10 +21,10 @@ export const chartLineVisibility: Record<ChartSeriesKey, boolean> = {
 export const scoreGridLines = [0, 20, 40, 60, 80, 100];
 
 export const severityChartItems: SeverityChartItem[] = [
-  { key: "critical", label: "Critical", color: "#f35f63" },
-  { key: "high", label: "높음", color: "#fb8a3d" },
-  { key: "medium", label: "중간", color: "#f3b234" },
-  { key: "low", label: "낮음", color: "#10b981" }
+  { key: "CRITICAL", label: "Critical", color: "#f35f63" },
+  { key: "HIGH", label: "높음", color: "#fb8a3d" },
+  { key: "MEDIUM", label: "중간", color: "#f3b234" },
+  { key: "LOW", label: "낮음", color: "#10b981" }
 ];
 
 export const wcagCriterionByIssueCode: Record<string, WcagCriterion> = {

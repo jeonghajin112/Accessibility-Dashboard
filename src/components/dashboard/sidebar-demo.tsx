@@ -1,6 +1,7 @@
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { ToggleTheme } from "@/components/ui/toggle-theme";
-import { LogOut, Menu, MoveRight, RefreshCw } from "lucide-react";
+import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
+import { LogOut, RefreshCw } from "lucide-react";
 import { Suspense, lazy, useState } from "react";
 
 import { OrganizationModelCreateModal } from "./modals/organization-model-create-modal";
@@ -32,11 +33,6 @@ function DashboardPanelFallback() {
 export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: SidebarDemoProps) {
   const [open, setOpen] = useState(false);
   const dashboard = useDashboardController({ onBootstrapComplete });
-  const today = new Date();
-  const currentDay = today.getDate();
-  const currentWeekday = new Intl.DateTimeFormat("ko-KR", { weekday: "long" }).format(today);
-  const currentMonth = new Intl.DateTimeFormat("ko-KR", { month: "long" }).format(today);
-  const currentYear = today.getFullYear();
   const isDashboardHome = dashboard.menu === "dashboard";
   const shouldShowHeaderTitle =
     dashboard.menu !== "dashboard" && !(dashboard.menu === "projects" && !dashboard.selectedOrganizationModel);
@@ -77,27 +73,16 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
         <section className="min-w-0 flex-1 overflow-visible">
           <div className="dashboard-top-zone relative px-4 sm:px-7 lg:px-10">
           <header className="dashboard-fixed-header absolute top-4 right-4 left-4 z-30 flex items-start justify-between gap-5 sm:top-7 sm:right-7 sm:left-7 lg:top-10 lg:right-10 lg:left-10">
-            <div className="flex min-w-0 items-start gap-4">
+            <div className="flex min-w-0 items-center gap-4">
               <button
                 type="button"
-                className="dashboard-menu-trigger inline-flex shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/80 text-slate-900 shadow-[0_16px_34px_rgba(31,27,24,0.08)] backdrop-blur transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+                className="dashboard-menu-trigger inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-transparent text-slate-900 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
                 aria-label="사이드바 열기"
                 aria-expanded={open}
                 onClick={() => setOpen(true)}
               >
-                <Menu className="dashboard-menu-icon" strokeWidth={2} />
+                <MenuToggleIcon open={open} className="dashboard-menu-icon relative z-10" duration={500} />
               </button>
-              <div className="min-w-0">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="dashboard-header-logo inline-flex shrink-0 items-center justify-center rounded-full bg-[#111111] font-black tracking-tight text-white shadow-[0_14px_28px_rgba(17,17,17,0.14)]">
-                    UA
-                  </span>
-                  <div className="min-w-0 leading-tight">
-                    <p className="dashboard-brand-title truncate font-bold tracking-tight text-slate-900">UNI ACCESS</p>
-                    <p className="dashboard-brand-subtitle truncate font-medium text-slate-500">{dashboard.headerLabel}</p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {shouldShowHeaderTitle && (
@@ -158,32 +143,12 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
           </header>
 
           <div className={`dashboard-date-widget absolute ${isDashboardHome ? "flex" : "hidden"} flex-wrap items-center`}>
-            <div className="dashboard-date-day inline-flex shrink-0 items-center justify-center rounded-full font-bold tracking-tight">
-              {currentDay}
-            </div>
-            <div className="dashboard-date-copy leading-tight">
-              <p className="dashboard-date-text font-bold tracking-tight text-slate-900">{currentWeekday},</p>
-              <p className="dashboard-date-text font-bold text-slate-900">{currentMonth}, {currentYear}년</p>
-            </div>
-            <span aria-hidden className="dashboard-date-separator hidden w-px sm:block" />
-            <button
-              type="button"
-              className="dashboard-date-action inline-flex items-center rounded-full font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
-              onClick={dashboard.goToProjectsRoot}
-            >
+            <h1 className="dashboard-home-title font-black tracking-tight text-slate-900">Dashboard</h1>
+            {/*
               접근성 검사 시작
-              <MoveRight size={22} strokeWidth={1.65} />
-            </button>
+            */}
           </div>
 
-          <div className={`dashboard-help-copy pointer-events-none absolute ${isDashboardHome ? "hidden text-left md:block" : "hidden"}`}>
-            <p className="dashboard-help-title font-bold tracking-tight text-slate-900">
-              접근성 점검이 필요하신가요?
-            </p>
-            <p className="dashboard-help-subtitle font-medium text-slate-400">
-              <span className="font-bold text-[#ef6a50]">UNIACCESS</span>에서 바로 시작해보세요.
-            </p>
-          </div>
           </div>
 
           <div className="dashboard-content-zone px-4 py-3 sm:px-7 sm:py-4 lg:px-10 lg:py-4">
@@ -204,19 +169,19 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
                   <SiteDashboardPanel
                     organization={dashboard.selectedOrganizationModel}
                     evaluationTarget={dashboard.selectedEvaluationTargetModel}
-                    evaluationRequests={dashboard.dashboardData?.evaluation_requests ?? []}
-                    analysisResults={dashboard.dashboardData?.analysis_results ?? []}
-                    scoreResults={dashboard.dashboardData?.score_results ?? []}
-                    issueResults={dashboard.dashboardData?.issue_results ?? []}
-                    improvementGuides={dashboard.dashboardData?.improvement_guides ?? []}
+                    evaluationRequests={dashboard.dashboardData?.evaluationRequests ?? []}
+                    analysisResults={dashboard.dashboardData?.analysisResults ?? []}
+                    scoreResults={dashboard.dashboardData?.scoreResults ?? []}
+                    issueResults={dashboard.dashboardData?.issueResults ?? []}
+                    improvementGuides={dashboard.dashboardData?.improvementGuides ?? []}
                   />
                 ) : dashboard.selectedOrganizationModel ? (
                   <OrganizationModelDetailPanel
                     organization={dashboard.selectedOrganizationModel}
-                    evaluationRequests={dashboard.dashboardData?.evaluation_requests ?? []}
-                    analysisResults={dashboard.dashboardData?.analysis_results ?? []}
-                    scoreResults={dashboard.dashboardData?.score_results ?? []}
-                    issueResults={dashboard.dashboardData?.issue_results ?? []}
+                    evaluationRequests={dashboard.dashboardData?.evaluationRequests ?? []}
+                    analysisResults={dashboard.dashboardData?.analysisResults ?? []}
+                    scoreResults={dashboard.dashboardData?.scoreResults ?? []}
+                    issueResults={dashboard.dashboardData?.issueResults ?? []}
                     isDarkMode={dashboard.isDarkMode}
                     onDeleteEvaluationTargetModel={dashboard.handleDeleteEvaluationTargetModel}
                     onOpenCreateSiteModal={dashboard.openSiteCreateModal}
@@ -240,8 +205,8 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
 
             {dashboard.menu === "reports" && (
               <ReportsPanel
-                scoreResults={dashboard.dashboardData?.score_results ?? []}
-                issueResults={dashboard.dashboardData?.issue_results ?? []}
+                scoreResults={dashboard.dashboardData?.scoreResults ?? []}
+                issueResults={dashboard.dashboardData?.issueResults ?? []}
                 isLoading={dashboard.isDashboardLoading}
                 errorMessage={dashboard.dashboardError}
               />

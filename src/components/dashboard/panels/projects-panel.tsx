@@ -78,16 +78,16 @@ export function OrganizationModelsPanel({
 
   const organizationsWithLastUpdated = [...organizations]
     .map((organization) => {
-      const latestEvaluationTargetModelAt = organization.evaluation_targets.reduce((latest, site) => {
-        const timestamp = Date.parse(site.created_at);
+      const latestEvaluationTargetModelAt = organization.evaluationTargets.reduce((latest, site) => {
+        const timestamp = Date.parse(site.createdAt);
         return Number.isNaN(timestamp) ? latest : Math.max(latest, timestamp);
       }, 0);
-      const projectUpdatedAt = Date.parse(organization.updated_at);
+      const projectUpdatedAt = Date.parse(organization.updatedAt);
       const lastUpdatedAt = Math.max(Number.isNaN(projectUpdatedAt) ? 0 : projectUpdatedAt, latestEvaluationTargetModelAt);
 
       return {
         ...organization,
-        lastUpdatedAt: lastUpdatedAt > 0 ? new Date(lastUpdatedAt).toISOString() : organization.updated_at
+        lastUpdatedAt: lastUpdatedAt > 0 ? new Date(lastUpdatedAt).toISOString() : organization.updatedAt
       };
     });
 
@@ -103,7 +103,7 @@ export function OrganizationModelsPanel({
     }
 
     if (sortConfig.key === "targetSites") {
-      const siteCountDiff = b.evaluation_targets.length - a.evaluation_targets.length;
+      const siteCountDiff = b.evaluationTargets.length - a.evaluationTargets.length;
       if (siteCountDiff !== 0) {
         return sortConfig.direction === "desc" ? siteCountDiff : -siteCountDiff;
       }
@@ -268,7 +268,7 @@ export function OrganizationModelsPanel({
                     </td>
                     <td className="px-4 py-1.5 align-middle">
                       <span className="text-xs font-medium text-slate-700">
-                        {project.evaluation_targets.length}개
+                        {project.evaluationTargets.length}개
                       </span>
                     </td>
                     <td className="project-list-updated px-4 py-1.5 align-middle text-xs tabular-nums text-slate-500">

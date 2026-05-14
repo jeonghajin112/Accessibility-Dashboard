@@ -1,9 +1,9 @@
-﻿import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Info, LoaderCircle, MoveRight, Search } from "lucide-react";
 
-import type { DashboardViewModel, SeverityLevel } from "@/types/accessibility-domain";
+import type { DashboardViewModel, ScoreResult, SeverityLevel } from "@/types/accessibility-domain";
 
 import { categoryLabelMap, chartTokens, severityLabelMap } from "../shared/constants";
 import { PanelMessage } from "../shared/display";
@@ -24,6 +24,7 @@ const MONTHLY_TOOLTIP_WIDTH = 104;
 const MONTHLY_TOOLTIP_HEIGHT = 72;
 const MONTHLY_TOOLTIP_MARGIN = 8;
 const issueCodeLabelMap: Record<string, string> = {
+  "5.1.1": "적절한 대체 텍스트 제공",
   "img-alt": "대체 텍스트",
   "heading-order": "제목 구조",
   "color-contrast": "색상 대비",
@@ -31,6 +32,7 @@ const issueCodeLabelMap: Record<string, string> = {
   "label-missing": "레이블/지시사항"
 };
 const issueCodeSummaryMap: Record<string, string> = {
+  "5.1.1": "정보성 이미지에 대체 텍스트가 필요합니다.",
   "img-alt": "이미지 의미를 스크린리더가 전달할 수 있도록 대체 텍스트가 필요합니다.",
   "heading-order": "제목, 목록, 관계 정보가 화면 구조뿐 아니라 의미 구조로도 전달되어야 합니다.",
   "color-contrast": "텍스트와 배경의 대비가 충분해야 저시력 사용자도 내용을 읽을 수 있습니다.",
@@ -49,7 +51,7 @@ const wcagPageTransitionVariants = {
 };
 
 function getIssueCategoryKey(issueCode: string): "perceivable" | "operable" | "understandable" | "robust" {
-  if (issueCode.includes("contrast") || issueCode.includes("alt")) {
+  if (issueCode === "5.1.1" || issueCode.includes("contrast") || issueCode.includes("alt")) {
     return "perceivable";
   }
   if (issueCode.includes("keyboard") || issueCode.includes("focus")) {
@@ -59,6 +61,11 @@ function getIssueCategoryKey(issueCode: string): "perceivable" | "operable" | "u
     return "understandable";
   }
   return "robust";
+}
+
+function getKwcagLabel(issueCode: string): string {
+  const normalizedIssueCode = issueCode.trim();
+  return normalizedIssueCode ? `KWCAG ${normalizedIssueCode}` : "KWCAG 기준";
 }
 
 function getFloatingMonthlyTooltipPosition(pointerX: number, pointerY: number) {
@@ -220,7 +227,7 @@ export function DashboardPanel({
       selectedReportProjectId === null || data.organizations.some((project) => project.id === selectedReportProjectId);
     const selectedSiteExists =
       selectedReportSiteId === null ||
-      data.organizations.some((project) => project.evaluation_targets.some((site) => site.id === selectedReportSiteId));
+      data.organizations.some((project) => project.evaluationTargets.some((site) => site.id === selectedReportSiteId));
 
     if (!selectedProjectExists) {
       setSelectedReportProjectId(null);
@@ -246,39 +253,39 @@ export function DashboardPanel({
     return <PanelMessage label="대시보드 데이터가 없습니다." />;
   }
 
-  const scoreByEvaluationRequestModelId = new Map(data.score_results.map((score) => [score.evaluation_request_id, score]));
-  const topIssueSummaries = buildTopIssueSummaries(data.issue_results);
-  const monthlyScoreSummaries = buildMonthlyScoreSummaries(data.score_results);
+  const scoreByEvaluationRequestModelId = new Map(data.scoreResults.map((score) => [score.evaluationRequestId, score]));
+  const topIssueSummaries = buildTopIssueSummaries(data.issueResults);
+  const monthlyScoreSummaries = buildMonthlyScoreSummaries(data.scoreResults);
   const scanRows = buildRecentScanRows(data);
 
   const requestIdByAnalysisResultId = new Map(
-    data.analysis_results.map((analysisResult) => [analysisResult.id, analysisResult.evaluation_request_id])
+    data.analysisResults.map((analysisResult) => [analysisResult.id, analysisResult.evaluationRequestId])
   );
-  const latestRequestByTargetId = new Map<number, (typeof data.evaluation_requests)[number]>();
-  for (const request of data.evaluation_requests) {
-    const current = latestRequestByTargetId.get(request.evaluation_target_id);
-    const requestTime = Date.parse(request.updated_at);
-    const currentTime = current ? Date.parse(current.updated_at) : 0;
+  const latestRequestByTargetId = new Map<number, (typeof data.evaluationRequests)[number]>();
+  for (const request of data.evaluationRequests) {
+    const current = latestRequestByTargetId.get(request.evaluationTargetId);
+    const requestTime = Date.parse(request.updatedAt);
+    const currentTime = current ? Date.parse(current.updatedAt) : 0;
     if (!current || requestTime > currentTime) {
-      latestRequestByTargetId.set(request.evaluation_target_id, request);
+      latestRequestByTargetId.set(request.evaluationTargetId, request);
     }
   }
 
   const latestRequestIds = new Set([...latestRequestByTargetId.values()].map((request) => request.id));
   const hasAnalysisRequestLinks = requestIdByAnalysisResultId.size > 0;
   const currentIssueResults = hasAnalysisRequestLinks
-    ? (data.issue_results ?? []).filter((issue) => {
-        const requestId = requestIdByAnalysisResultId.get(issue.analysis_result_id);
+    ? (data.issueResults ?? []).filter((issue) => {
+        const requestId = requestIdByAnalysisResultId.get(issue.analysisResultId);
         return typeof requestId === "number" && latestRequestIds.has(requestId);
       })
-    : (data.issue_results ?? []);
+    : (data.issueResults ?? []);
   const baseIssueCategoryKeys = ["perceivable", "operable", "understandable", "robust"] as const;
   const emptyIssueCategorySummary = {
     count: 0,
-    critical: 0,
-    high: 0,
-    medium: 0,
-    low: 0
+    CRITICAL: 0,
+    HIGH: 0,
+    MEDIUM: 0,
+    LOW: 0
   };
   const categoryRows = baseIssueCategoryKeys.map((category) => ({
     category,
@@ -342,7 +349,7 @@ export function DashboardPanel({
   const monthlyScoreRows = [...monthlyScoreSummaries]
     .sort((a, b) => a.month.localeCompare(b.month))
     .slice(-6);
-  const monthlySeriesRaw = monthlyScoreRows.map((item) => item.average_score);
+  const monthlySeriesRaw = monthlyScoreRows.map((item) => item.averageScore);
   const monthlyLabels =
     monthlyScoreRows.length >= 2
       ? monthlyScoreRows.map((item) => item.month)
@@ -353,21 +360,21 @@ export function DashboardPanel({
     monthlyScoreRows.length >= 2
       ? monthlySeriesRaw
       : monthlyScoreRows.length === 1
-        ? monthlyLabels.map(() => monthlyScoreRows[0]!.average_score)
+        ? monthlyLabels.map(() => monthlyScoreRows[0]!.averageScore)
         : [72, 81, 76, 88, 85, 84];
   const currentMonthlyScoreResultModel = monthlySeries[monthlySeries.length - 1] ?? 0;
-  const severityKeys = ["critical", "high", "medium", "low"] as const;
+  const severityKeys = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] as const;
   const severityTrendColors: Record<SeverityLevel, string> = {
-    critical: "#ef4444",
-    high: "#f97316",
-    medium: "#f59e0b",
-    low: "#38bdf8"
+    CRITICAL: "#ef4444",
+    HIGH: "#f97316",
+    MEDIUM: "#f59e0b",
+    LOW: "#38bdf8"
   };
   const emptySeverityCounts: Record<SeverityLevel, number> = {
-    critical: 0,
-    high: 0,
-    medium: 0,
-    low: 0
+    CRITICAL: 0,
+    HIGH: 0,
+    MEDIUM: 0,
+    LOW: 0
   };
   const currentOpenSeverityCounts = { ...emptySeverityCounts };
 
@@ -441,8 +448,8 @@ export function DashboardPanel({
   if (currentIssueResults.length > 0 || hasAnalysisRequestLinks) {
     for (const issue of currentIssueResults) {
       addWcagViolation({
-        issueCode: issue.issue_code,
-        issueTitle: issue.issue_title,
+        issueCode: issue.issueCode,
+        issueTitle: issue.issueTitle,
         message: issue.message,
         severity: issue.severity,
         count: 1
@@ -451,7 +458,7 @@ export function DashboardPanel({
   } else {
     for (const issue of topIssueSummaries) {
       addWcagViolation({
-        issueCode: issue.issue_code,
+        issueCode: issue.issueCode,
         severity: issue.severity,
         count: issue.count
       });
@@ -465,6 +472,7 @@ export function DashboardPanel({
       );
       return {
         issueCode: row.issueCode,
+        kwcagLabel: getKwcagLabel(row.issueCode),
         shortRef: row.issueCode,
         label: [...row.issueTitles][0] ?? "이슈 유형 미확인",
         description: [...row.descriptions][0] ?? "해당 이슈 유형의 반복 발생 여부를 우선 확인해 주세요.",
@@ -490,7 +498,7 @@ export function DashboardPanel({
     setWcagViolationPage(nextPage);
   };
   const reportSiteEntries = data.organizations.flatMap((project) =>
-    project.evaluation_targets.map((site) => ({
+    project.evaluationTargets.map((site) => ({
       project,
       site
     }))
@@ -525,7 +533,7 @@ export function DashboardPanel({
               kind: "project" as const,
               id: project.id,
               label: project.name,
-              description: `${project.evaluation_targets.length}개 사이트`
+              description: `${project.evaluationTargets.length}개 사이트`
             }))
             .slice(0, 6)
         : reportSiteEntries
@@ -562,15 +570,15 @@ export function DashboardPanel({
     selectedReportSite !== null
       ? new Set([selectedReportSite.id])
       : selectedReportProject !== null
-        ? new Set(selectedReportProject.evaluation_targets.map((site) => site.id))
+        ? new Set(selectedReportProject.evaluationTargets.map((site) => site.id))
         : new Set<number>();
   const reportScopeRows =
     reportScopeSiteIds.size > 0 ? scanRows.filter((row) => reportScopeSiteIds.has(row.siteId)) : scanRows;
-  const latestReportScanRow = reportScopeRows.find((row) => row.total_score !== null) ?? reportScopeRows[0] ?? null;
+  const latestReportScanRow = reportScopeRows.find((row) => row.totalScore !== null) ?? reportScopeRows[0] ?? null;
   const scopedLatestReportRows =
     selectedReportProject !== null && selectedReportSite === null
-      ? selectedReportProject.evaluation_targets
-          .map((site) => reportScopeRows.find((row) => row.siteId === site.id && row.total_score !== null) ?? reportScopeRows.find((row) => row.siteId === site.id))
+      ? selectedReportProject.evaluationTargets
+          .map((site) => reportScopeRows.find((row) => row.siteId === site.id && row.totalScore !== null) ?? reportScopeRows.find((row) => row.siteId === site.id))
           .filter((row): row is (typeof scanRows)[number] => Boolean(row))
       : latestReportScanRow
         ? [latestReportScanRow]
@@ -578,26 +586,26 @@ export function DashboardPanel({
   const latestReportRequestIds = new Set(scopedLatestReportRows.map((row) => row.id));
   const latestReportIssues =
     latestReportRequestIds.size > 0 && hasAnalysisRequestLinks
-      ? (data.issue_results ?? []).filter((issue) => {
-          const requestId = requestIdByAnalysisResultId.get(issue.analysis_result_id);
+      ? (data.issueResults ?? []).filter((issue) => {
+          const requestId = requestIdByAnalysisResultId.get(issue.analysisResultId);
           return typeof requestId === "number" && latestReportRequestIds.has(requestId);
         })
       : [];
-  const latestReportScoredRows = scopedLatestReportRows.filter((row) => row.total_score !== null);
+  const latestReportScoredRows = scopedLatestReportRows.filter((row) => row.totalScore !== null);
   const latestReportScore =
     selectedReportProject !== null && selectedReportSite === null
       ? latestReportScoredRows.length > 0
         ? Math.round(
-            latestReportScoredRows.reduce((sum, row) => sum + (row.total_score ?? 0), 0) / latestReportScoredRows.length
+            latestReportScoredRows.reduce((sum, row) => sum + (row.totalScore ?? 0), 0) / latestReportScoredRows.length
           )
         : null
-      : latestReportScanRow?.total_score ?? null;
+      : latestReportScanRow?.totalScore ?? null;
   const latestReportProjectTitle = selectedReportProject?.name ?? latestReportScanRow?.project ?? "리포트 대기";
   const latestReportSiteTitle =
     selectedReportSite?.name ??
-    (selectedReportProject ? `${selectedReportProject.evaluation_targets.length}개 사이트 요약` : latestReportScanRow?.site ?? "최근 평가 없음");
+    (selectedReportProject ? `${selectedReportProject.evaluationTargets.length}개 사이트 요약` : latestReportScanRow?.site ?? "최근 평가 없음");
   const isProjectReportSummary = selectedReportProject !== null && selectedReportSite === null;
-  const latestReportDate = reportScopeRows[0]?.updated_at ?? latestReportScanRow?.updated_at ?? null;
+  const latestReportDate = reportScopeRows[0]?.updatedAt ?? latestReportScanRow?.updatedAt ?? null;
   const latestReportDirectSiteTarget = selectedReportSiteEntry
     ? {
         projectId: selectedReportSiteEntry.project.id,
@@ -647,21 +655,21 @@ export function DashboardPanel({
   }));
   const latestReportScoreHistory =
     reportScopeSiteIds.size > 0
-      ? [...data.evaluation_requests]
-          .filter((request) => reportScopeSiteIds.has(request.evaluation_target_id))
+      ? [...data.evaluationRequests]
+          .filter((request) => reportScopeSiteIds.has(request.evaluationTargetId))
           .map((request) => ({
-            score: scoreByEvaluationRequestModelId.get(request.id)?.total_score ?? null,
-            time: Date.parse(request.updated_at)
+            score: scoreByEvaluationRequestModelId.get(request.id)?.totalScore ?? null,
+            time: Date.parse(request.updatedAt)
           }))
           .filter((row): row is { score: number; time: number } => row.score !== null && !Number.isNaN(row.time))
           .sort((a, b) => a.time - b.time)
           .slice(-6)
       : latestReportScanRow
-        ? [...data.evaluation_requests]
-            .filter((request) => request.evaluation_target_id === latestReportScanRow.siteId)
+        ? [...data.evaluationRequests]
+            .filter((request) => request.evaluationTargetId === latestReportScanRow.siteId)
             .map((request) => ({
-              score: scoreByEvaluationRequestModelId.get(request.id)?.total_score ?? null,
-              time: Date.parse(request.updated_at)
+              score: scoreByEvaluationRequestModelId.get(request.id)?.totalScore ?? null,
+              time: Date.parse(request.updatedAt)
             }))
             .filter((row): row is { score: number; time: number } => row.score !== null && !Number.isNaN(row.time))
             .sort((a, b) => a.time - b.time)
@@ -736,18 +744,33 @@ export function DashboardPanel({
   const currentScoreResultModelValueColor = isDarkMode ? "#ffffff" : "#0f172a";
   const currentScoreResultModelUnitColor = isDarkMode ? "#cbd5e1" : "#64748b";
   const currentScoreResultModelLabelColor = isDarkMode ? "#94a3b8" : "#64748b";
-  const radarKeys = ["perceivable", "operable", "understandable", "robust"] as const;
-  const radarRows = radarKeys.map((key) => ({
-    key,
-    label: categoryLabelMap[key],
-    value: 0
-  }));
+  const getAverageScore = (selector: (scoreResult: ScoreResult) => number) =>
+    data.scoreResults.length > 0
+      ? Math.round(data.scoreResults.reduce((sum, scoreResult) => sum + selector(scoreResult), 0) / data.scoreResults.length)
+      : 0;
+  const radarRows = [
+    {
+      key: "cv",
+      label: "시각",
+      value: getAverageScore((scoreResult) => scoreResult.cvScore)
+    },
+    {
+      key: "rule_based",
+      label: "규칙",
+      value: getAverageScore((scoreResult) => scoreResult.ruleScore)
+    },
+    {
+      key: "difficulty",
+      label: "텍스트",
+      value: getAverageScore((scoreResult) => scoreResult.aiScore)
+    }
+  ];
   const radarRowsForPlot = radarRows.map((row) => ({
     ...row,
     visualValue: row.value
   }));
   const radarCenter = 130;
-  const radarRadius = 90;
+  const radarRadius = 96;
   const radarAxisPoints = radarRows.map((_, index) =>
     polarToCartesian(
       radarCenter,
@@ -943,8 +966,8 @@ export function DashboardPanel({
               unitColor={currentScoreResultModelUnitColor}
             />
 
-            <article className="dashboard-card relative flex min-h-0 flex-col rounded-xl border border-slate-200 bg-white px-4 pt-4 pb-3">
-              <div className="flex min-h-[30px] items-start justify-between gap-3">
+            <article className="dashboard-card relative flex min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-1">
+              <div className="flex min-h-[30px] items-start justify-between gap-3 px-4 pt-3">
                 <div className="min-w-0">
                   <div className="relative flex items-center gap-1">
                     <p className="text-sm font-semibold leading-5 text-slate-900">반복 이슈 유형</p>
@@ -961,7 +984,7 @@ export function DashboardPanel({
                     </button>
                     {isWcagInfoVisible && (
                       <div
-                        className="pointer-events-none absolute left-0 top-7 z-[130] w-64 rounded-lg bg-slate-950 px-3 py-2 text-left text-[11px] font-medium leading-relaxed text-white shadow-[0_14px_32px_rgba(2,6,23,0.28)]"
+                        className="pointer-events-none absolute left-3 top-8 z-[130] w-64 rounded-lg bg-slate-950 px-3 py-2 text-left text-[11px] font-medium leading-relaxed text-white shadow-[0_14px_32px_rgba(2,6,23,0.28)]"
                         role="tooltip"
                       >
                         이슈 코드별 미해결 건수를 발생 건수가 많은 순서로 보여줍니다.
@@ -972,7 +995,7 @@ export function DashboardPanel({
               </div>
 
               {activeWcagViolation ? (
-                <div className="-mx-3 mt-0 flex min-h-0 flex-1 flex-col">
+                <div className="mt-2 flex min-h-0 flex-1 flex-col">
                   <motion.div
                     key={activeWcagViolation.issueCode}
                     custom={wcagViolationDirection}
@@ -980,17 +1003,19 @@ export function DashboardPanel({
                     initial="enter"
                     animate="center"
                     transition={{ duration: 0.24, ease: "easeOut" }}
-                    className="flex min-h-0 flex-1 flex-col rounded-[28px] bg-white p-1.5"
+                    className="flex min-h-0 flex-1 flex-col rounded-[28px] bg-white pt-3"
                   >
-                    <div className="flex h-full flex-col px-2 py-1">
+                    <div className="flex h-full flex-col px-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-[1.32rem] font-bold leading-none text-slate-900">
-                            {activeWcagViolation.issueCode}
+                          <p className="text-[11px] font-semibold tracking-[0.08em]" style={{ color: "#64748b" }}>
+                            {activeWcagViolation.kwcagLabel}
                           </p>
-                          <p className="mt-1 truncate text-xs font-medium" style={{ color: "#64748b" }}>
+                          <p
+                            className="mt-1 min-w-0 truncate pb-0.5 text-[1.32rem] font-bold leading-[1.15] text-slate-900"
+                            title={activeWcagViolation.label}
+                          >
                             {activeWcagViolation.label}
-                            {activeWcagViolation.categoryLabel ? ` · ${activeWcagViolation.categoryLabel}` : ""}
                           </p>
                         </div>
                         <p className="shrink-0 text-right text-[1.75rem] font-bold leading-none text-slate-900">
@@ -1024,7 +1049,7 @@ export function DashboardPanel({
                   </div>
                 </div>
               ) : (
-                <div className="-mx-3 mt-0 flex min-h-0 flex-1 items-center justify-center rounded-[28px] bg-white p-2 text-sm font-semibold text-slate-500">
+                <div className="mt-2 flex min-h-0 flex-1 items-center justify-center rounded-[28px] bg-white p-2 text-sm font-semibold text-slate-500">
                   표시할 반복 이슈 유형이 없습니다.
                 </div>
               )}
@@ -1034,11 +1059,11 @@ export function DashboardPanel({
               <article className="dashboard-card order-4 flex h-[348px] min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-1 xl:col-span-1 xl:col-start-2 xl:row-start-2">
                 <div className="min-h-[36px] px-3 pt-3">
                   <div className="relative flex items-center gap-1">
-                    <p className="text-sm font-semibold leading-5 text-slate-900">접근성 분야별 평균 점수</p>
+                    <p className="text-sm font-semibold leading-5 text-slate-900">분석 유형별 평균 점수</p>
                     <button
                       type="button"
                       className="inline-flex h-5 w-5 shrink-0 translate-y-[1px] items-center justify-center rounded-full text-slate-500 transition-colors hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
-                      aria-label="접근성 분야별 평균 점수 설명"
+                      aria-label="분석 유형별 평균 점수 설명"
                       onMouseEnter={() => setIsAverageScoreInfoVisible(true)}
                       onMouseLeave={() => setIsAverageScoreInfoVisible(false)}
                       onFocus={() => setIsAverageScoreInfoVisible(true)}
@@ -1051,14 +1076,14 @@ export function DashboardPanel({
                         className="pointer-events-none absolute left-0 top-7 z-[130] w-64 rounded-lg bg-slate-950 px-3 py-2 text-left text-[11px] font-medium leading-relaxed text-white shadow-[0_14px_32px_rgba(2,6,23,0.28)]"
                         role="tooltip"
                       >
-                        전체 평가 결과를 기준으로 접근성 분야별 평균 점수를 비교해 보여줍니다.
+                        전체 평가 결과를 기준으로 시각 기반, 규칙 기반, 텍스트 기반 평균 점수를 비교해 보여줍니다.
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="mt-1 flex min-h-0 flex-1 flex-col rounded-[28px] bg-white p-3">
+                <div className="mt-1 flex min-h-0 flex-1 flex-col rounded-[28px] bg-transparent px-2 py-1">
                 <div ref={radarChartRef} className="relative flex min-w-0 flex-1 items-center justify-center pt-0">
-                  <div className="relative h-[214px] w-[214px]">
+                  <div className="relative h-[242px] w-[242px]">
                     <motion.svg
                       viewBox="0 0 260 260"
                       className="h-full w-full overflow-visible"
@@ -1152,7 +1177,7 @@ export function DashboardPanel({
                             point.x < radarCenter ? "end" : point.x > radarCenter ? "start" : "middle"
                           }
                           fill={radarLabelColor}
-                          fontSize="12"
+                          fontSize="12.5"
                           fontWeight="600"
                         >
                           {radarRows[index]!.label}
@@ -1418,7 +1443,7 @@ export function DashboardPanel({
                     )}
                   </div>
                 </div>
-                <div className="mt-1 flex min-h-0 flex-1 flex-col rounded-[28px] bg-white p-3">
+                <div className="mt-1 flex min-h-0 flex-1 flex-col rounded-[28px] bg-transparent p-3">
                 <div
                   ref={issueChartRef}
                   className="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 pt-0"

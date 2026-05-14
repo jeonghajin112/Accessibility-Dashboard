@@ -154,7 +154,7 @@
     --dashboard-top-height: max(220px, 25vh);
     --dashboard-control-size: clamp(42px, 5.1vh, 52px);
     --dashboard-control-icon: clamp(17px, 2vh, 20px);
-    --dashboard-brand-title-size: clamp(0.875rem, 1.55vh, 1rem);
+    --dashboard-brand-title-size: clamp(1.125rem, 1.95vh, 1.25rem);
     --dashboard-brand-subtitle-size: var(--dashboard-brand-title-size);
     --dashboard-account-name-size: clamp(0.8125rem, 1.45vh, 0.875rem);
     --dashboard-account-role-size: clamp(0.75rem, 1.25vh, 0.75rem);
@@ -368,10 +368,7 @@
   }
 
   .bridge-dashboard.theme-dark .dashboard-menu-trigger {
-    background-color: var(--dashboard-menu-trigger-bg) !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
     color: var(--dashboard-menu-trigger-text) !important;
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26) !important;
   }
 
   .bridge-dashboard.theme-light .toggle-theme-button {
@@ -389,6 +386,43 @@
     left: var(--dashboard-side-gutter) !important;
   }
 
+  .bridge-dashboard .dashboard-menu-trigger {
+    position: relative;
+    overflow: visible;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .bridge-dashboard .dashboard-fixed-header .dashboard-menu-trigger {
+    margin-left: clamp(-4px, -0.5vh, -2px);
+  }
+
+  .bridge-dashboard .dashboard-menu-trigger::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: #f5f5f5;
+    box-shadow: none;
+    opacity: 0;
+    transform: scale(0.72);
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease;
+  }
+
+  .bridge-dashboard .dashboard-menu-trigger:hover::before,
+  .bridge-dashboard .dashboard-menu-trigger:focus-visible::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .bridge-dashboard.theme-dark .dashboard-menu-trigger::before {
+    background: rgba(148, 163, 184, 0.18);
+    box-shadow: none;
+  }
+
   .bridge-dashboard .dashboard-menu-trigger,
   .bridge-dashboard .dashboard-header-logo,
   .bridge-dashboard .dashboard-account-avatar,
@@ -404,13 +438,20 @@
     height: var(--dashboard-control-icon) !important;
   }
 
+  .bridge-dashboard .dashboard-menu-icon {
+    width: clamp(33px, 3.5vh, 36px) !important;
+    height: clamp(33px, 3.5vh, 36px) !important;
+  }
+
   .bridge-dashboard .dashboard-header-logo {
     font-size: clamp(0.6875rem, 1.35vh, 0.75rem) !important;
   }
 
-  .bridge-dashboard .dashboard-brand-title {
-    font-size: var(--dashboard-brand-title-size) !important;
-    letter-spacing: 0;
+  .bridge-dashboard .dashboard-sidebar-wordmark {
+    width: clamp(118px, 11vw, 148px);
+    height: auto;
+    color: var(--dashboard-text-strong);
+    display: block;
   }
 
   .bridge-dashboard .dashboard-brand-subtitle {
@@ -448,6 +489,13 @@
 
   .bridge-dashboard .dashboard-date-text {
     font-size: var(--dashboard-date-text-size) !important;
+  }
+
+  #root .bridge-dashboard .dashboard-home-title {
+    font-size: clamp(2.85rem, 6.4vh, 4.9rem) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.035em !important;
+    line-height: 0.95;
   }
 
   .bridge-dashboard .dashboard-date-separator {

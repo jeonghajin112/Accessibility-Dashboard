@@ -1,165 +1,150 @@
 export type MenuType = "dashboard" | "projects" | "reports" | "project-create";
 
-export type SeverityLevel = "critical" | "high" | "medium" | "low";
+export type RequestStatus = "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+export type AnalysisStatus = "SUCCESS" | "FAILED";
+export type AnalyzerType = "RULE_BASED" | "AI_TEXT" | "CV_VISION";
+export type SeverityLevel = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+export type ScoreCategory = "rule_based" | "difficulty" | "cv";
 
 export type Organization = {
   id: number;
   name: string;
   type: string;
-  homepage_url: string;
+  homepageUrl: string;
   description: string;
   status: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type EvaluationTarget = {
   id: number;
-  organization_id: number;
+  organizationId: number;
   name: string;
-  target_type: string;
-  access_url: string;
+  targetType: string;
+  accessUrl: string;
   description: string;
   status: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type EvaluationRequest = {
   id: number;
-  evaluation_target_id: number;
-  status: string;
-  request_note: string;
-  requested_at: string;
-  created_at: string;
-  updated_at: string;
+  evaluationTargetId: number;
+  targetName?: string;
+  status: RequestStatus;
+  requestNote: string;
+  requestedAt: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type AnalysisResult = {
   id: number;
-  evaluation_request_id: number;
-  analyzer_type: string;
-  status: string;
+  evaluationRequestId: number;
+  analyzerType: AnalyzerType;
+  status: AnalysisStatus;
   summary: string;
-  started_at: string | null;
-  completed_at: string | null;
-  created_at: string;
-  updated_at: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type IssueResult = {
   id: number;
-  analysis_result_id: number;
-  issue_code: string;
-  issue_title: string;
+  analysisResultId: number;
+  issueCode: string;
+  issueTitle: string;
   severity: SeverityLevel;
-  location_path: string;
+  locationPath: string;
   message: string;
   resolved: boolean;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ScoreResult = {
   id: number;
-  evaluation_request_id: number;
-  total_score: number;
-  rule_score: number;
-  ai_score: number;
-  cv_score: number;
-  created_at: string;
-  updated_at: string;
+  evaluationRequestId: number;
+  totalScore: number;
+  ruleScore: number;
+  aiScore: number;
+  cvScore: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ScoreDetail = {
   id: number;
-  score_result_id: number;
-  category: string;
+  scoreResultId?: number;
+  category: ScoreCategory;
   score: number;
-  max_score: number;
+  maxScore: number;
   comment: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ImprovementGuide = {
   id: number;
-  issue_result_id: number;
+  issueResultId: number;
   title: string;
-  guide_content: string;
-  example_code: string;
+  guideContent: string;
+  exampleCode: string;
   recommendation: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type EvaluationTargetModel = {
   id: number;
   name: string;
-  target_type: string;
-  access_url: string;
-  status: string;
-  created_at: string;
+  targetType: string;
+  accessUrl: string;
+  status: RequestStatus | string;
+  createdAt: string;
 };
 
 export type OrganizationModel = {
   id: number;
   name: string;
   type: string;
-  homepage_url: string;
+  homepageUrl: string;
   description: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  evaluation_targets: EvaluationTargetModel[];
+  status: RequestStatus | string;
+  createdAt: string;
+  updatedAt: string;
+  evaluationTargets: EvaluationTargetModel[];
 };
 
-export type EvaluationRequestModel = {
-  id: number;
-  evaluation_target_id: number;
-  status: string;
-  request_note: string;
-  requested_at: string;
-  created_at: string;
-  updated_at: string;
-};
-
-export type IssueResultModel = {
-  id: number;
-  analysis_result_id: number;
-  issue_code: string;
-  issue_title: string;
-  severity: SeverityLevel;
-  location_path: string;
-  message: string;
-  resolved: boolean;
-  created_at: string;
-  updated_at: string;
-};
+export type EvaluationRequestModel = EvaluationRequest;
+export type IssueResultModel = IssueResult;
 
 export type DashboardViewModel = {
   organizations: OrganizationModel[];
-  evaluation_requests: EvaluationRequestModel[];
-  analysis_results: AnalysisResult[];
-  score_results: ScoreResult[];
-  score_details: ScoreDetail[];
-  issue_results: IssueResultModel[];
-  improvement_guides: ImprovementGuide[];
+  evaluationRequests: EvaluationRequestModel[];
+  analysisResults: AnalysisResult[];
+  scoreResults: ScoreResult[];
+  scoreDetails: ScoreDetail[];
+  issueResults: IssueResultModel[];
+  improvementGuides: ImprovementGuide[];
 };
 
 export type DashboardApiResponse = {
   organizations: Organization[];
-  evaluation_targets: EvaluationTarget[];
-  evaluation_requests: EvaluationRequest[];
-  analysis_results: AnalysisResult[];
-  issue_results: IssueResult[];
-  score_results: ScoreResult[];
-  score_details?: ScoreDetail[];
-  improvement_guides?: ImprovementGuide[];
+  evaluationTargets: EvaluationTarget[];
+  evaluationRequests: EvaluationRequest[];
+  analysisResults: AnalysisResult[];
+  issueResults: IssueResult[];
+  scoreResults: ScoreResult[];
+  scoreDetails?: ScoreDetail[];
+  improvementGuides?: ImprovementGuide[];
 };
 
 export type CreateEvaluationTargetInput = {
   projectId: number;
   name: string;
-  access_url: string;
+  accessUrl: string;
 };

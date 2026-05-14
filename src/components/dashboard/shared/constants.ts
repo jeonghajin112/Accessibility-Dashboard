@@ -4,10 +4,10 @@ export type ScanStatus = "완료" | "진행중" | "실패" | "미실행";
 
 
 export const severityLabelMap: Record<SeverityLevel, string> = {
-  critical: "치명",
-  high: "높음",
-  medium: "중간",
-  low: "낮음"
+  CRITICAL: "치명",
+  HIGH: "높음",
+  MEDIUM: "중간",
+  LOW: "낮음"
 };
 
 export const categoryLabelMap: Record<string, string> = {

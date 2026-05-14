@@ -40,9 +40,9 @@ export function SiteCreateModal({
 
   const handleAddSite = async () => {
     const name = siteName.trim();
-    const access_url = baseUrl.trim();
+    const accessUrl = baseUrl.trim();
 
-    if (name.length === 0 || access_url.length === 0) {
+    if (name.length === 0 || accessUrl.length === 0) {
       setSiteCreateError("페이지 이름과 주소는 필수입니다.");
       return;
     }
@@ -54,7 +54,7 @@ export function SiteCreateModal({
       await onAddEvaluationTargetModel({
         projectId: project.id,
         name,
-        access_url
+        accessUrl
       });
 
       setSiteName("");

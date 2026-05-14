@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 
-const parsedPort = Number(process.env.MOCK_SERVER_PORT ?? "8090");
-const PORT = Number.isFinite(parsedPort) ? parsedPort : 8090;
+const parsedPort = Number(process.env.MOCK_SERVER_PORT ?? "8080");
+const PORT = Number.isFinite(parsedPort) ? parsedPort : 8080;
 
 const users = [
   {
@@ -9,7 +9,7 @@ const users = [
     email: "alex7355@naver.com",
     name: "정하진",
     role: "admin",
-    created_at: "2026-02-10T09:00:00+09:00"
+    createdAt: "2026-02-10T09:00:00+09:00"
   }
 ];
 
@@ -18,41 +18,41 @@ const organizations = [
     id: 101,
     name: "고령자 접근성 포털",
     type: "PC 웹",
-    homepage_url: "https://city.example.com",
+    homepageUrl: "https://city.example.com",
     description: "고령자와 장애인을 위한 접근성 점수 대시보드",
     status: "active",
-    created_at: "2026-02-11T09:30:00+09:00",
-    updated_at: "2026-02-11T09:30:00+09:00"
+    createdAt: "2026-02-11T09:30:00+09:00",
+    updatedAt: "2026-02-11T09:30:00+09:00"
   },
   {
     id: 102,
     name: "의료기관 가이드 점검",
     type: "PC 웹",
-    homepage_url: "https://clinic.example.com",
+    homepageUrl: "https://clinic.example.com",
     description: "의료기관 페이지의 가독성과 키보드 내비게이션 점검",
     status: "active",
-    created_at: "2026-02-12T11:05:00+09:00",
-    updated_at: "2026-02-12T11:05:00+09:00"
+    createdAt: "2026-02-12T11:05:00+09:00",
+    updatedAt: "2026-02-12T11:05:00+09:00"
   },
   {
     id: 103,
     name: "공공 서비스 감사",
     type: "모바일 웹",
-    homepage_url: "https://service.example.go.kr",
+    homepageUrl: "https://service.example.go.kr",
     description: "공공 서비스 웹사이트 접근성 분기 점검",
     status: "active",
-    created_at: "2026-02-13T13:20:00+09:00",
-    updated_at: "2026-02-13T13:20:00+09:00"
+    createdAt: "2026-02-13T13:20:00+09:00",
+    updatedAt: "2026-02-13T13:20:00+09:00"
   },
   {
     id: 104,
     name: "홍익대학교 홈페이지 접근성 평가",
     type: "PC 웹",
-    homepage_url: "https://www.hongik.ac.kr",
+    homepageUrl: "https://www.hongik.ac.kr",
     description: "홍익대학교 주요 페이지의 웹 접근성 상태를 분석하기 위한 발표용 예시 프로젝트",
     status: "active",
-    created_at: "2026-03-10T10:10:00+09:00",
-    updated_at: "2026-03-10T10:10:00+09:00"
+    createdAt: "2026-03-10T10:10:00+09:00",
+    updatedAt: "2026-03-10T10:10:00+09:00"
   }
 ];
 
@@ -72,14 +72,14 @@ const evaluationTargets = [
   [11, 104, "홍익대학교 캠퍼스맵", "PC 웹", "https://map.hongik.ac.kr"]
 ].map(([id, organizationId, name, targetType, accessUrl]) => ({
   id,
-  organization_id: organizationId,
+  organizationId: organizationId,
   name,
-  target_type: targetType,
-  access_url: accessUrl,
+  targetType: targetType,
+  accessUrl: accessUrl,
   description: `${name} 평가 대상`,
   status: "active",
-  created_at: "2026-03-10T10:18:00+09:00",
-  updated_at: "2026-03-10T10:18:00+09:00"
+  createdAt: "2026-03-10T10:18:00+09:00",
+  updatedAt: "2026-03-10T10:18:00+09:00"
 }));
 
 const evaluationRequests = [];
@@ -91,47 +91,47 @@ const improvementGuides = [];
 
 const issueTemplates = [
   {
-    issue_code: "color-contrast",
-    issue_title: "Insufficient contrast",
-    severity: "critical",
-    location_path: ".notice",
+    issueCode: "color-contrast",
+    issueTitle: "Insufficient contrast",
+    severity: "CRITICAL",
+    locationPath: ".notice",
     message: "본문 텍스트 대비가 기준보다 낮습니다.",
     title: "색상 대비 개선",
-    guide_content: "텍스트와 배경색의 명도 대비를 WCAG 기준 이상으로 조정합니다.",
-    example_code: ".notice { color: #111827; background: #ffffff; }",
+    guideContent: "텍스트와 배경색의 명도 대비를 WCAG 기준 이상으로 조정합니다.",
+    exampleCode: ".notice { color: #111827; background: #ffffff; }",
     recommendation: "브랜드 색상을 유지하더라도 본문과 버튼 텍스트에는 충분한 대비를 적용하세요."
   },
   {
-    issue_code: "img-alt",
-    issue_title: "Image alternative text",
-    severity: "high",
-    location_path: "img.hero",
+    issueCode: "5.1.1",
+    issueTitle: "적절한 대체 텍스트 제공",
+    severity: "HIGH",
+    locationPath: "img.hero",
     message: "정보성 이미지에 대체 텍스트가 없습니다.",
     title: "대체 텍스트 추가",
-    guide_content: "의미가 있는 이미지에는 내용을 설명하는 alt 속성을 제공합니다.",
-    example_code: '<img src="hero.png" alt="주요 서비스 안내 배너" />',
+    guideContent: "의미가 있는 이미지에는 내용을 설명하는 alt 속성을 제공합니다.",
+    exampleCode: '<img src="hero.png" alt="주요 서비스 안내 배너" />',
     recommendation: "장식 이미지는 빈 alt를, 정보 이미지는 구체적인 설명을 사용하세요."
   },
   {
-    issue_code: "label-missing",
-    issue_title: "Form label missing",
-    severity: "medium",
-    location_path: "input[type='text']",
+    issueCode: "label-missing",
+    issueTitle: "Form label missing",
+    severity: "MEDIUM",
+    locationPath: "input[type='text']",
     message: "입력 필드와 연결된 레이블이 없습니다.",
     title: "폼 레이블 연결",
-    guide_content: "모든 입력 필드는 label 또는 aria-label로 목적을 전달해야 합니다.",
-    example_code: '<label for="keyword">검색어</label><input id="keyword" />',
+    guideContent: "모든 입력 필드는 label 또는 aria-label로 목적을 전달해야 합니다.",
+    exampleCode: '<label for="keyword">검색어</label><input id="keyword" />',
     recommendation: "placeholder만으로 입력 목적을 안내하지 마세요."
   },
   {
-    issue_code: "heading-order",
-    issue_title: "Heading order skipped",
-    severity: "low",
-    location_path: "h4.section-title",
+    issueCode: "heading-order",
+    issueTitle: "Heading order skipped",
+    severity: "LOW",
+    locationPath: "h4.section-title",
     message: "제목 레벨이 순차적이지 않습니다.",
     title: "제목 계층 정리",
-    guide_content: "페이지 제목 구조가 h1부터 논리적으로 이어지도록 수정합니다.",
-    example_code: "<h2>섹션 제목</h2><h3>하위 제목</h3>",
+    guideContent: "페이지 제목 구조가 h1부터 논리적으로 이어지도록 수정합니다.",
+    exampleCode: "<h2>섹션 제목</h2><h3>하위 제목</h3>",
     recommendation: "시각적 크기 조절은 CSS로 처리하고 제목 태그는 문서 구조 기준으로 사용하세요."
   }
 ];
@@ -164,37 +164,37 @@ function createEvaluationRequestSnapshot(evaluationTarget, windowIndex) {
 
   const evaluationRequest = {
     id: nextEvaluationRequestId++,
-    evaluation_target_id: evaluationTarget.id,
-    status: "finished",
-    request_note: "",
-    requested_at: timestamp,
-    created_at: timestamp,
-    updated_at: timestamp
+    evaluationTargetId: evaluationTarget.id,
+    status: "COMPLETED",
+    requestNote: "",
+    requestedAt: timestamp,
+    createdAt: timestamp,
+    updatedAt: timestamp
   };
   evaluationRequests.push(evaluationRequest);
 
   const analysisResult = {
     id: nextAnalysisResultId++,
-    evaluation_request_id: evaluationRequest.id,
-    analyzer_type: "integrated",
-    status: "finished",
+    evaluationRequestId: evaluationRequest.id,
+    analyzerType: "RULE_BASED",
+    status: "SUCCESS",
     summary: "통합 접근성 분석 결과",
-    started_at: timestamp,
-    completed_at: timestamp,
-    created_at: timestamp,
-    updated_at: timestamp
+    startedAt: timestamp,
+    completedAt: timestamp,
+    createdAt: timestamp,
+    updatedAt: timestamp
   };
   analysisResults.push(analysisResult);
 
   const scoreResult = {
     id: nextScoreResultId++,
-    evaluation_request_id: evaluationRequest.id,
-    total_score: totalScore,
-    rule_score: clamp(totalScore - 2, 0, 100),
-    ai_score: clamp(totalScore + 1, 0, 100),
-    cv_score: clamp(totalScore - 1, 0, 100),
-    created_at: timestamp,
-    updated_at: timestamp
+    evaluationRequestId: evaluationRequest.id,
+    totalScore: totalScore,
+    ruleScore: clamp(totalScore - 2, 0, 100),
+    aiScore: clamp(totalScore + 1, 0, 100),
+    cvScore: clamp(totalScore - 1, 0, 100),
+    createdAt: timestamp,
+    updatedAt: timestamp
   };
   scoreResults.push(scoreResult);
 
@@ -207,27 +207,27 @@ function createEvaluationRequestSnapshot(evaluationTarget, windowIndex) {
     const template = issueTemplates[(evaluationTarget.id + index) % issueTemplates.length];
     const issueResult = {
       id: nextIssueResultId++,
-      analysis_result_id: analysisResult.id,
-      issue_code: template.issue_code,
-      issue_title: template.issue_title,
+      analysisResultId: analysisResult.id,
+      issueCode: template.issueCode,
+      issueTitle: template.issueTitle,
       severity: template.severity,
-      location_path: template.location_path,
+      locationPath: template.locationPath,
       message: template.message,
       resolved: false,
-      created_at: timestamp,
-      updated_at: timestamp
+      createdAt: timestamp,
+      updatedAt: timestamp
     };
     issueResults.push(issueResult);
 
     improvementGuides.push({
       id: nextImprovementGuideId++,
-      issue_result_id: issueResult.id,
+      issueResultId: issueResult.id,
       title: template.title,
-      guide_content: template.guide_content,
-      example_code: template.example_code,
+      guideContent: template.guideContent,
+      exampleCode: template.exampleCode,
       recommendation: template.recommendation,
-      created_at: timestamp,
-      updated_at: timestamp
+      createdAt: timestamp,
+      updatedAt: timestamp
     });
   }
 }
@@ -241,14 +241,30 @@ for (const evaluationTarget of evaluationTargets) {
 function buildDashboardPayload() {
   return {
     organizations,
-    evaluation_targets: evaluationTargets,
-    evaluation_requests: evaluationRequests,
-    analysis_results: analysisResults,
-    issue_results: issueResults,
-    score_results: scoreResults,
-    score_details: scoreDetails,
-    improvement_guides: improvementGuides
+    evaluationTargets: evaluationTargets,
+    evaluationRequests: evaluationRequests,
+    analysisResults: analysisResults,
+    issueResults: issueResults,
+    scoreResults: scoreResults,
+    scoreDetails: scoreDetails,
+    improvementGuides: improvementGuides
   };
+}
+
+function sendApiSuccess(response, data, statusCode = 200, message = null) {
+  sendJson(response, statusCode, {
+    success: true,
+    data,
+    message
+  });
+}
+
+function sendApiError(response, statusCode, message) {
+  sendJson(response, statusCode, {
+    success: false,
+    data: null,
+    message
+  });
 }
 
 function sendJson(response, statusCode, payload) {
@@ -259,6 +275,169 @@ function sendJson(response, statusCode, payload) {
     "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS"
   });
   response.end(JSON.stringify(payload));
+}
+
+function toBackendRequestStatus(status) {
+  const normalizedStatus = String(status).trim().toUpperCase();
+  if (normalizedStatus === "FINISHED" || normalizedStatus === "COMPLETED" || normalizedStatus === "SUCCESS") {
+    return "COMPLETED";
+  }
+  if (normalizedStatus === "FAILED" || normalizedStatus === "ERROR" || normalizedStatus === "CANCELLED") {
+    return "FAILED";
+  }
+  if (normalizedStatus === "RUNNING" || normalizedStatus === "PROCESSING") {
+    return "RUNNING";
+  }
+  return "PENDING";
+}
+
+function toBackendAnalysisStatus(status) {
+  const normalizedStatus = String(status).trim().toUpperCase();
+  return normalizedStatus === "FAILED" || normalizedStatus === "ERROR" ? "FAILED" : "SUCCESS";
+}
+
+function toBackendAnalyzerType(analysisResult) {
+  const normalizedType = String(analysisResult.analyzerType).trim().toUpperCase();
+  if (normalizedType === "AI_TEXT") {
+    return "AI_TEXT";
+  }
+  if (normalizedType === "CV_VISION") {
+    return "CV_VISION";
+  }
+  return "RULE_BASED";
+}
+
+function toBackendSeverity(severity) {
+  return String(severity).toUpperCase();
+}
+
+function toBackendEvaluationRequest(evaluationRequest) {
+  const evaluationTarget = findEvaluationTarget(evaluationRequest.evaluationTargetId);
+
+  return {
+    id: evaluationRequest.id,
+    evaluationTargetId: evaluationRequest.evaluationTargetId,
+    targetName: evaluationTarget?.name ?? `target#${evaluationRequest.evaluationTargetId}`,
+    status: toBackendRequestStatus(evaluationRequest.status),
+    requestNote: evaluationRequest.requestNote,
+    requestedAt: evaluationRequest.requestedAt,
+    createdAt: evaluationRequest.createdAt,
+    updatedAt: evaluationRequest.updatedAt
+  };
+}
+
+function findEvaluationRequest(evaluationRequestId) {
+  return evaluationRequests.find((evaluationRequest) => evaluationRequest.id === evaluationRequestId);
+}
+
+function findScoreResultByRequestId(evaluationRequestId) {
+  return scoreResults.find((scoreResult) => scoreResult.evaluationRequestId === evaluationRequestId);
+}
+
+function findAnalysisResultsByRequestId(evaluationRequestId) {
+  return analysisResults.filter((analysisResult) => analysisResult.evaluationRequestId === evaluationRequestId);
+}
+
+function findIssuesByRequestId(evaluationRequestId) {
+  const analysisIds = new Set(
+    findAnalysisResultsByRequestId(evaluationRequestId).map((analysisResult) => analysisResult.id)
+  );
+
+  return issueResults.filter((issueResult) => analysisIds.has(issueResult.analysisResultId));
+}
+
+function findIssuesByAnalysisResultId(analysisResultId) {
+  return issueResults.filter((issueResult) => issueResult.analysisResultId === analysisResultId);
+}
+
+function buildBackendScoreDetails(scoreResult) {
+  const categories = [
+    {
+      category: "rule_based",
+      score: scoreResult.ruleScore,
+      comment: "KWCAG rule-based analyzer score"
+    },
+    {
+      category: "difficulty",
+      score: scoreResult.aiScore,
+      comment: "AI text difficulty analyzer score"
+    },
+    {
+      category: "cv",
+      score: scoreResult.cvScore,
+      comment: "Computer vision analyzer score"
+    }
+  ];
+
+  return categories.map((item, index) => ({
+    id: scoreResult.id * 10 + index + 1,
+    scoreResultId: scoreResult.id,
+    category: item.category,
+    score: item.score,
+    maxScore: 100,
+    comment: item.comment,
+    createdAt: scoreResult.createdAt,
+    updatedAt: scoreResult.updatedAt
+  }));
+}
+
+function toBackendScore(scoreResult) {
+  return {
+    id: scoreResult.id,
+    evaluationRequestId: scoreResult.evaluationRequestId,
+    totalScore: scoreResult.totalScore,
+    ruleScore: scoreResult.ruleScore,
+    aiScore: scoreResult.aiScore,
+    cvScore: scoreResult.cvScore,
+    details: buildBackendScoreDetails(scoreResult),
+    createdAt: scoreResult.createdAt,
+    updatedAt: scoreResult.updatedAt
+  };
+}
+
+function toBackendAnalysisResult(analysisResult) {
+  return {
+    id: analysisResult.id,
+    evaluationRequestId: analysisResult.evaluationRequestId,
+    analyzerType: toBackendAnalyzerType(analysisResult),
+    status: toBackendAnalysisStatus(analysisResult.status),
+    summary: analysisResult.summary,
+    startedAt: analysisResult.startedAt,
+    completedAt: analysisResult.completedAt,
+    createdAt: analysisResult.createdAt,
+    updatedAt: analysisResult.updatedAt
+  };
+}
+
+function toBackendIssue(issueResult) {
+  return {
+    id: issueResult.id,
+    analysisResultId: issueResult.analysisResultId,
+    issueCode: issueResult.issueCode,
+    issueTitle: issueResult.issueTitle,
+    severity: toBackendSeverity(issueResult.severity),
+    locationPath: issueResult.locationPath,
+    message: issueResult.message,
+    resolved: issueResult.resolved,
+    createdAt: issueResult.createdAt,
+    updatedAt: issueResult.updatedAt
+  };
+}
+
+function buildBackendRequestSummary(evaluationRequest) {
+  const evaluationTarget = findEvaluationTarget(evaluationRequest.evaluationTargetId);
+  const scoreResult = findScoreResultByRequestId(evaluationRequest.id);
+  const requestIssues = findIssuesByRequestId(evaluationRequest.id);
+
+  return {
+    requestId: evaluationRequest.id,
+    targetName: evaluationTarget?.name ?? `target#${evaluationRequest.evaluationTargetId}`,
+    status: toBackendRequestStatus(evaluationRequest.status),
+    totalScore: scoreResult?.totalScore ?? 0,
+    totalIssueCount: requestIssues.length,
+    criticalIssueCount: requestIssues.filter((issueResult) => toBackendSeverity(issueResult.severity) === "CRITICAL").length,
+    requestedAt: evaluationRequest.requestedAt
+  };
 }
 
 function readJsonBody(request) {
@@ -299,28 +478,28 @@ function findEvaluationTarget(evaluationTargetId) {
 function removeEvaluationTargetData(evaluationTargetId) {
   const requestIds = new Set(
     evaluationRequests
-      .filter((evaluationRequest) => evaluationRequest.evaluation_target_id === evaluationTargetId)
+      .filter((evaluationRequest) => evaluationRequest.evaluationTargetId === evaluationTargetId)
       .map((evaluationRequest) => evaluationRequest.id)
   );
   const analysisIds = new Set(
     analysisResults
-      .filter((analysisResult) => requestIds.has(analysisResult.evaluation_request_id))
+      .filter((analysisResult) => requestIds.has(analysisResult.evaluationRequestId))
       .map((analysisResult) => analysisResult.id)
   );
   const scoreIds = new Set(
     scoreResults
-      .filter((scoreResult) => requestIds.has(scoreResult.evaluation_request_id))
+      .filter((scoreResult) => requestIds.has(scoreResult.evaluationRequestId))
       .map((scoreResult) => scoreResult.id)
   );
   const issueIds = new Set(
     issueResults
-      .filter((issueResult) => analysisIds.has(issueResult.analysis_result_id))
+      .filter((issueResult) => analysisIds.has(issueResult.analysisResultId))
       .map((issueResult) => issueResult.id)
   );
 
-  removeWhere(improvementGuides, (guide) => issueIds.has(guide.issue_result_id));
+  removeWhere(improvementGuides, (guide) => issueIds.has(guide.issueResultId));
   removeWhere(issueResults, (issueResult) => issueIds.has(issueResult.id));
-  removeWhere(scoreDetails, (scoreDetail) => scoreIds.has(scoreDetail.score_result_id));
+  removeWhere(scoreDetails, (scoreDetail) => scoreIds.has(scoreDetail.scoreResultId));
   removeWhere(scoreResults, (scoreResult) => scoreIds.has(scoreResult.id));
   removeWhere(analysisResults, (analysisResult) => analysisIds.has(analysisResult.id));
   removeWhere(evaluationRequests, (evaluationRequest) => requestIds.has(evaluationRequest.id));
@@ -352,13 +531,85 @@ const server = createServer(async (request, response) => {
 
   const url = new URL(request.url, `http://localhost:${PORT}`);
   const path = url.pathname;
+  const legacyPath = path.startsWith("/api/") ? path.slice(4) : path;
 
   if (request.method === "GET" && path === "/health") {
     sendJson(response, 200, { ok: true });
     return;
   }
 
-  if (request.method === "POST" && path === "/auth/login") {
+  if (request.method === "GET" && path === "/api/health") {
+    sendApiSuccess(response, { ok: true });
+    return;
+  }
+
+  if (request.method === "GET" && path === "/api/requests") {
+    const backendRequests = [...evaluationRequests]
+      .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+      .map(toBackendEvaluationRequest);
+
+    sendApiSuccess(response, backendRequests);
+    return;
+  }
+
+  const backendRequestSummaryMatch = path.match(/^\/api\/results\/requests\/(\d+)\/summary$/);
+  if (request.method === "GET" && backendRequestSummaryMatch) {
+    const evaluationRequestId = Number(backendRequestSummaryMatch[1]);
+    const evaluationRequest = findEvaluationRequest(evaluationRequestId);
+
+    if (!evaluationRequest) {
+      sendApiError(response, 404, "Evaluation request not found");
+      return;
+    }
+
+    sendApiSuccess(response, buildBackendRequestSummary(evaluationRequest));
+    return;
+  }
+
+  const backendScoreMatch = path.match(/^\/api\/scores\/requests\/(\d+)$/);
+  if (request.method === "GET" && backendScoreMatch) {
+    const evaluationRequestId = Number(backendScoreMatch[1]);
+    const evaluationRequest = findEvaluationRequest(evaluationRequestId);
+    const scoreResult = findScoreResultByRequestId(evaluationRequestId);
+
+    if (!evaluationRequest || !scoreResult) {
+      sendApiError(response, 404, "Score result not found");
+      return;
+    }
+
+    sendApiSuccess(response, toBackendScore(scoreResult));
+    return;
+  }
+
+  const backendAnalysisResultsMatch = path.match(/^\/api\/analysis\/requests\/(\d+)\/results$/);
+  if (request.method === "GET" && backendAnalysisResultsMatch) {
+    const evaluationRequestId = Number(backendAnalysisResultsMatch[1]);
+    const evaluationRequest = findEvaluationRequest(evaluationRequestId);
+
+    if (!evaluationRequest) {
+      sendApiError(response, 404, "Evaluation request not found");
+      return;
+    }
+
+    sendApiSuccess(response, findAnalysisResultsByRequestId(evaluationRequestId).map(toBackendAnalysisResult));
+    return;
+  }
+
+  const backendIssuesMatch = path.match(/^\/api\/analysis\/results\/(\d+)\/issues$/);
+  if (request.method === "GET" && backendIssuesMatch) {
+    const analysisResultId = Number(backendIssuesMatch[1]);
+    const analysisResult = analysisResults.find((item) => item.id === analysisResultId);
+
+    if (!analysisResult) {
+      sendApiError(response, 404, "Analysis result not found");
+      return;
+    }
+
+    sendApiSuccess(response, findIssuesByAnalysisResultId(analysisResultId).map(toBackendIssue));
+    return;
+  }
+
+  if (request.method === "POST" && legacyPath === "/auth/login") {
     try {
       const body = await readJsonBody(request);
       const payload = body && typeof body === "object" ? body : {};
@@ -380,52 +631,52 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  if (request.method === "GET" && path === "/dashboard") {
+  if (request.method === "GET" && legacyPath === "/dashboard") {
     sendJson(response, 200, buildDashboardPayload());
     return;
   }
 
-  if (request.method === "GET" && path === "/organizations") {
+  if (request.method === "GET" && legacyPath === "/organizations") {
     sendJson(response, 200, { organizations });
     return;
   }
 
-  if (request.method === "GET" && path === "/evaluation-targets") {
-    sendJson(response, 200, { evaluation_targets: evaluationTargets });
+  if (request.method === "GET" && legacyPath === "/evaluation-targets") {
+    sendJson(response, 200, { evaluationTargets: evaluationTargets });
     return;
   }
 
-  if (request.method === "GET" && path === "/evaluation-requests") {
-    sendJson(response, 200, { evaluation_requests: evaluationRequests });
+  if (request.method === "GET" && legacyPath === "/evaluation-requests") {
+    sendJson(response, 200, { evaluationRequests: evaluationRequests });
     return;
   }
 
-  if (request.method === "GET" && path === "/analysis-results") {
-    sendJson(response, 200, { analysis_results: analysisResults });
+  if (request.method === "GET" && legacyPath === "/analysis-results") {
+    sendJson(response, 200, { analysisResults: analysisResults });
     return;
   }
 
-  if (request.method === "GET" && path === "/issue-results") {
-    sendJson(response, 200, { issue_results: issueResults });
+  if (request.method === "GET" && legacyPath === "/issue-results") {
+    sendJson(response, 200, { issueResults: issueResults });
     return;
   }
 
-  if (request.method === "GET" && path === "/score-results") {
-    sendJson(response, 200, { score_results: scoreResults });
+  if (request.method === "GET" && legacyPath === "/score-results") {
+    sendJson(response, 200, { scoreResults: scoreResults });
     return;
   }
 
-  if (request.method === "GET" && path === "/score-details") {
-    sendJson(response, 200, { score_details: scoreDetails });
+  if (request.method === "GET" && legacyPath === "/score-details") {
+    sendJson(response, 200, { scoreDetails: scoreDetails });
     return;
   }
 
-  if (request.method === "GET" && path === "/improvement-guides") {
-    sendJson(response, 200, { improvement_guides: improvementGuides });
+  if (request.method === "GET" && legacyPath === "/improvement-guides") {
+    sendJson(response, 200, { improvementGuides: improvementGuides });
     return;
   }
 
-  if (request.method === "POST" && path === "/organizations") {
+  if (request.method === "POST" && legacyPath === "/organizations") {
     try {
       const body = await readJsonBody(request);
       const payload = body && typeof body === "object" ? body : {};
@@ -442,11 +693,11 @@ const server = createServer(async (request, response) => {
         id: nextOrganizationId++,
         name,
         type: "PC 웹",
-        homepage_url: "",
+        homepageUrl: "",
         description,
         status: "active",
-        created_at: now,
-        updated_at: now
+        createdAt: now,
+        updatedAt: now
       };
 
       organizations.push(organization);
@@ -459,7 +710,7 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  const organizationRouteMatch = path.match(/^\/organizations\/(\d+)$/);
+  const organizationRouteMatch = legacyPath.match(/^\/organizations\/(\d+)$/);
   if ((request.method === "PATCH" || request.method === "DELETE") && organizationRouteMatch) {
     const organizationId = Number(organizationRouteMatch[1]);
     const organization = findOrganization(organizationId);
@@ -483,7 +734,7 @@ const server = createServer(async (request, response) => {
 
         organization.name = name;
         organization.description = description;
-        organization.updated_at = new Date().toISOString();
+        organization.updatedAt = new Date().toISOString();
         sendJson(response, 200, { organization });
       } catch (error) {
         sendJson(response, 400, {
@@ -493,16 +744,16 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    for (const evaluationTarget of evaluationTargets.filter((target) => target.organization_id === organizationId)) {
+    for (const evaluationTarget of evaluationTargets.filter((target) => target.organizationId === organizationId)) {
       removeEvaluationTargetData(evaluationTarget.id);
     }
-    removeWhere(evaluationTargets, (evaluationTarget) => evaluationTarget.organization_id === organizationId);
+    removeWhere(evaluationTargets, (evaluationTarget) => evaluationTarget.organizationId === organizationId);
     removeWhere(organizations, (item) => item.id === organizationId);
     sendJson(response, 200, { organization });
     return;
   }
 
-  const createEvaluationTargetMatch = path.match(/^\/organizations\/(\d+)\/evaluation-targets$/);
+  const createEvaluationTargetMatch = legacyPath.match(/^\/organizations\/(\d+)\/evaluation-targets$/);
   if (request.method === "POST" && createEvaluationTargetMatch) {
     const organizationId = Number(createEvaluationTargetMatch[1]);
     const organization = findOrganization(organizationId);
@@ -516,29 +767,29 @@ const server = createServer(async (request, response) => {
       const body = await readJsonBody(request);
       const payload = body && typeof body === "object" ? body : {};
       const name = typeof payload.name === "string" ? payload.name.trim() : "";
-      const accessUrl = typeof payload.access_url === "string" ? payload.access_url.trim() : "";
+      const accessUrl = typeof payload.accessUrl === "string" ? payload.accessUrl.trim() : "";
 
       if (name.length === 0 || accessUrl.length === 0) {
-        sendJson(response, 400, { error: "name and access_url are required" });
+        sendJson(response, 400, { error: "name and accessUrl are required" });
         return;
       }
 
       const now = new Date().toISOString();
       const evaluationTarget = {
         id: nextEvaluationTargetId++,
-        organization_id: organization.id,
+        organizationId: organization.id,
         name,
-        target_type: organization.type,
-        access_url: accessUrl,
+        targetType: organization.type,
+        accessUrl: accessUrl,
         description: `${name} 평가 대상`,
         status: "active",
-        created_at: now,
-        updated_at: now
+        createdAt: now,
+        updatedAt: now
       };
 
       evaluationTargets.push(evaluationTarget);
       createEvaluationRequestSnapshot(evaluationTarget, monthWindows.length - 1);
-      organization.updated_at = now;
+      organization.updatedAt = now;
       sendJson(response, 201, { evaluation_target: evaluationTarget });
     } catch (error) {
       sendJson(response, 400, {
@@ -548,14 +799,14 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  const evaluationTargetRouteMatch = path.match(/^\/organizations\/(\d+)\/evaluation-targets\/(\d+)$/);
+  const evaluationTargetRouteMatch = legacyPath.match(/^\/organizations\/(\d+)\/evaluation-targets\/(\d+)$/);
   if ((request.method === "PATCH" || request.method === "DELETE") && evaluationTargetRouteMatch) {
     const organizationId = Number(evaluationTargetRouteMatch[1]);
     const evaluationTargetId = Number(evaluationTargetRouteMatch[2]);
     const organization = findOrganization(organizationId);
     const evaluationTarget = findEvaluationTarget(evaluationTargetId);
 
-    if (!organization || !evaluationTarget || evaluationTarget.organization_id !== organizationId) {
+    if (!organization || !evaluationTarget || evaluationTarget.organizationId !== organizationId) {
       sendJson(response, 404, { error: "Evaluation target not found" });
       return;
     }
@@ -565,17 +816,17 @@ const server = createServer(async (request, response) => {
         const body = await readJsonBody(request);
         const payload = body && typeof body === "object" ? body : {};
         const name = typeof payload.name === "string" ? payload.name.trim() : "";
-        const accessUrl = typeof payload.access_url === "string" ? payload.access_url.trim() : "";
+        const accessUrl = typeof payload.accessUrl === "string" ? payload.accessUrl.trim() : "";
 
         if (name.length === 0 || accessUrl.length === 0) {
-          sendJson(response, 400, { error: "name and access_url are required" });
+          sendJson(response, 400, { error: "name and accessUrl are required" });
           return;
         }
 
         evaluationTarget.name = name;
-        evaluationTarget.access_url = accessUrl;
-        evaluationTarget.updated_at = new Date().toISOString();
-        organization.updated_at = evaluationTarget.updated_at;
+        evaluationTarget.accessUrl = accessUrl;
+        evaluationTarget.updatedAt = new Date().toISOString();
+        organization.updatedAt = evaluationTarget.updatedAt;
         sendJson(response, 200, { evaluation_target: evaluationTarget });
       } catch (error) {
         sendJson(response, 400, {
@@ -587,16 +838,16 @@ const server = createServer(async (request, response) => {
 
     removeEvaluationTargetData(evaluationTarget.id);
     removeWhere(evaluationTargets, (item) => item.id === evaluationTarget.id);
-    organization.updated_at = new Date().toISOString();
+    organization.updatedAt = new Date().toISOString();
     sendJson(response, 200, { evaluation_target: evaluationTarget });
     return;
   }
 
-  const evaluationTargetRequestRouteMatch = path.match(/^\/evaluation-targets\/(\d+)\/evaluation-requests$/);
+  const evaluationTargetRequestRouteMatch = legacyPath.match(/^\/evaluation-targets\/(\d+)\/evaluation-requests$/);
   if (request.method === "POST" && evaluationTargetRequestRouteMatch) {
     const evaluationTargetId = Number(evaluationTargetRequestRouteMatch[1]);
     const evaluationTarget = findEvaluationTarget(evaluationTargetId);
-    const organization = evaluationTarget ? findOrganization(evaluationTarget.organization_id) : null;
+    const organization = evaluationTarget ? findOrganization(evaluationTarget.organizationId) : null;
 
     if (!organization || !evaluationTarget) {
       sendJson(response, 404, { error: "Evaluation target not found" });
@@ -604,7 +855,7 @@ const server = createServer(async (request, response) => {
     }
 
     createEvaluationRequestSnapshot(evaluationTarget, monthWindows.length - 1);
-    organization.updated_at = new Date().toISOString();
+    organization.updatedAt = new Date().toISOString();
     sendJson(response, 201, {
       evaluation_request: evaluationRequests[evaluationRequests.length - 1]
     });

@@ -67,7 +67,7 @@ export function OrganizationModelDetailPanel({
     projectId: number;
     siteId: number;
     name: string;
-    access_url: string;
+    accessUrl: string;
   }) => Promise<void>;
   onDeleteEvaluationTargetModel: (input: { projectId: number; siteId: number }) => Promise<void>;
 }) {
@@ -131,40 +131,40 @@ export function OrganizationModelDetailPanel({
     setHoveredMonthlyPoint(null);
   }, [activeTab]);
 
-  const evaluationTargetIds = new Set(organization.evaluation_targets.map((target) => target.id));
+  const evaluationTargetIds = new Set(organization.evaluationTargets.map((target) => target.id));
   const organizationEvaluationRequests = evaluationRequests.filter((request) =>
-    evaluationTargetIds.has(request.evaluation_target_id)
+    evaluationTargetIds.has(request.evaluationTargetId)
   );
   const latestScanBySiteId = new Map<number, EvaluationRequestModel>();
   for (const evaluationRequest of organizationEvaluationRequests) {
-    const existing = latestScanBySiteId.get(evaluationRequest.evaluation_target_id);
+    const existing = latestScanBySiteId.get(evaluationRequest.evaluationTargetId);
     if (!existing) {
-      latestScanBySiteId.set(evaluationRequest.evaluation_target_id, evaluationRequest);
+      latestScanBySiteId.set(evaluationRequest.evaluationTargetId, evaluationRequest);
       continue;
     }
 
-    const currentTime = Date.parse(evaluationRequest.updated_at);
-    const existingTime = Date.parse(existing.updated_at);
+    const currentTime = Date.parse(evaluationRequest.updatedAt);
+    const existingTime = Date.parse(existing.updatedAt);
     if (currentTime > existingTime) {
-      latestScanBySiteId.set(evaluationRequest.evaluation_target_id, evaluationRequest);
+      latestScanBySiteId.set(evaluationRequest.evaluationTargetId, evaluationRequest);
     }
   }
   const latestEvaluationRequestIds = new Set(Array.from(latestScanBySiteId.values()).map((request) => request.id));
   const evaluationRequestById = new Map(organizationEvaluationRequests.map((request) => [request.id, request]));
   const organizationEvaluationRequestIds = new Set(organizationEvaluationRequests.map((request) => request.id));
   const requestIdByAnalysisResultId = new Map(
-    analysisResults.map((analysisResult) => [analysisResult.id, analysisResult.evaluation_request_id])
+    analysisResults.map((analysisResult) => [analysisResult.id, analysisResult.evaluationRequestId])
   );
   const organizationIssueResults = issueResults.filter((issue) => {
-    const requestId = requestIdByAnalysisResultId.get(issue.analysis_result_id);
+    const requestId = requestIdByAnalysisResultId.get(issue.analysisResultId);
     return typeof requestId === "number" && organizationEvaluationRequestIds.has(requestId);
   });
   const latestOrganizationIssueResults = issueResults.filter((issue) => {
-    const requestId = requestIdByAnalysisResultId.get(issue.analysis_result_id);
+    const requestId = requestIdByAnalysisResultId.get(issue.analysisResultId);
     return typeof requestId === "number" && latestEvaluationRequestIds.has(requestId);
   });
   const projectIssueCount = latestOrganizationIssueResults.length;
-  const scoreByEvaluationRequestId = new Map(scoreResults.map((scoreResult) => [scoreResult.evaluation_request_id, scoreResult]));
+  const scoreByEvaluationRequestId = new Map(scoreResults.map((scoreResult) => [scoreResult.evaluationRequestId, scoreResult]));
 
   const scoredOrganizationRequests = organizationEvaluationRequests
     .map((request) => {
@@ -172,8 +172,8 @@ export function OrganizationModelDetailPanel({
       return {
         request,
         scoreResult: scoreResult ?? null,
-        totalScore: scoreResult?.total_score ?? null,
-        timestamp: Date.parse(request.updated_at)
+        totalScore: scoreResult?.totalScore ?? null,
+        timestamp: Date.parse(request.updatedAt)
       };
     })
     .filter(
@@ -197,30 +197,30 @@ export function OrganizationModelDetailPanel({
   const analysisScorePalette = ["#111111", "#ef6a50", "#38bdf8"];
   const breakdownGaugePalette = ["#34d399", "#38bdf8", "#f59e0b", "#8b5cf6"];
   const summaryTotalScore = latestScoredRequest ? latestScore : null;
-  const summaryUpdatedDate = formatDateOnly(organization.updated_at);
+  const summaryUpdatedDate = formatDateOnly(organization.updatedAt);
   const summaryAnalysisScoreRows = [
     {
       key: "rule",
       label: "규칙 기반",
-      score: latestScoredRequest?.scoreResult.rule_score ?? null,
+      score: latestScoredRequest?.scoreResult.ruleScore ?? null,
       color: analysisScorePalette[0]
     },
     {
       key: "ai",
       label: "AI 분석",
-      score: latestScoredRequest?.scoreResult.ai_score ?? null,
+      score: latestScoredRequest?.scoreResult.aiScore ?? null,
       color: analysisScorePalette[1]
     },
     {
       key: "cv",
       label: "시각 분석",
-      score: latestScoredRequest?.scoreResult.cv_score ?? null,
+      score: latestScoredRequest?.scoreResult.cvScore ?? null,
       color: analysisScorePalette[2]
     }
   ];
   const projectIssueCountMap = new Map<string, number>();
   for (const issue of organizationIssueResults) {
-    const categoryKey = getIssueCategoryKey(issue.issue_code);
+    const categoryKey = getIssueCategoryKey(issue.issueCode);
     projectIssueCountMap.set(categoryKey, (projectIssueCountMap.get(categoryKey) ?? 0) + 1);
   }
   const projectIssueRows = (["perceivable", "robust", "operable", "understandable"] as const).map((key, index) => ({
@@ -232,15 +232,15 @@ export function OrganizationModelDetailPanel({
   const maxProjectIssueCount = Math.max(1, ...projectIssueRows.map((row) => row.count));
   const issueCountsByMonth = new Map<string, number>();
   for (const issue of organizationIssueResults) {
-    const requestId = requestIdByAnalysisResultId.get(issue.analysis_result_id);
+    const requestId = requestIdByAnalysisResultId.get(issue.analysisResultId);
     const evaluationRequest = typeof requestId === "number" ? evaluationRequestById.get(requestId) : null;
-    const monthKey = toMonthKey(evaluationRequest?.updated_at ?? issue.created_at);
+    const monthKey = toMonthKey(evaluationRequest?.updatedAt ?? issue.createdAt);
     issueCountsByMonth.set(monthKey, (issueCountsByMonth.get(monthKey) ?? 0) + 1);
   }
 
   const latestScoreByMonth = new Map<string, number>();
   for (const item of scoredOrganizationRequests) {
-    const monthKey = toMonthKey(item.request.updated_at);
+    const monthKey = toMonthKey(item.request.updatedAt);
     latestScoreByMonth.set(monthKey, item.totalScore);
   }
 
@@ -325,21 +325,21 @@ export function OrganizationModelDetailPanel({
   const projectChartLineGlow = isDarkMode ? "rgba(255, 255, 255, 0.16)" : "rgba(15, 23, 42, 0.14)";
   const projectBarColor = "#ff8a00";
 
-  const evaluationTargetById = new Map(organization.evaluation_targets.map((site) => [site.id, site]));
+  const evaluationTargetById = new Map(organization.evaluationTargets.map((site) => [site.id, site]));
 
-  const siteRows = organization.evaluation_targets.map((site) => {
+  const siteRows = organization.evaluationTargets.map((site) => {
     const latestScan = latestScanBySiteId.get(site.id);
     const latestScoreResult = latestScan ? scoreByEvaluationRequestId.get(latestScan.id) : undefined;
 
     return {
       id: site.id,
-      targetType: site.target_type,
+      targetType: site.targetType,
       name: site.name,
-      accessUrl: site.access_url,
+      accessUrl: site.accessUrl,
       status: latestScan ? mapScanStatus(latestScan.status) : "미진행",
-      totalScore: latestScoreResult?.total_score ?? null,
-      finishedAt: latestScan?.updated_at ?? null,
-      lastUpdatedAt: latestScan?.updated_at ?? site.created_at
+      totalScore: latestScoreResult?.totalScore ?? null,
+      finishedAt: latestScan?.updatedAt ?? null,
+      lastUpdatedAt: latestScan?.updatedAt ?? site.createdAt
     };
   });
 
@@ -430,7 +430,7 @@ export function OrganizationModelDetailPanel({
     return "site-status-badge site-status-badge-idle";
   };
 
-  const getTargetTypeInfo = (type: OrganizationModel["evaluation_targets"][number]["target_type"]) => {
+  const getTargetTypeInfo = (type: OrganizationModel["evaluationTargets"][number]["targetType"]) => {
     if (type === "모바일 웹") {
       return "모바일 웹";
     }
@@ -445,7 +445,7 @@ export function OrganizationModelDetailPanel({
   const openEditEvaluationTargetModel = (site: EvaluationTargetModel) => {
     setEditingEvaluationTargetModel(site);
     setEditSiteName(site.name);
-    setEditSiteBaseUrl(site.access_url);
+    setEditSiteBaseUrl(site.accessUrl);
     setEditEvaluationTargetError("");
   };
 
@@ -481,9 +481,9 @@ export function OrganizationModelDetailPanel({
     }
 
     const name = editSiteName.trim();
-    const access_url = editSiteBaseUrl.trim();
+    const accessUrl = editSiteBaseUrl.trim();
 
-    if (name.length === 0 || access_url.length === 0) {
+    if (name.length === 0 || accessUrl.length === 0) {
       setEditEvaluationTargetError("페이지 이름과 주소는 필수입니다.");
       return;
     }
@@ -496,7 +496,7 @@ export function OrganizationModelDetailPanel({
         projectId: organization.id,
         siteId: editingEvaluationTargetModel.id,
         name,
-        access_url
+        accessUrl
       });
 
       closeEditEvaluationTargetModel();

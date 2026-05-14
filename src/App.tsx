@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+﻿import { Suspense, lazy, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 const DashboardShell = lazy(() => import("@/components/ui/sidebar-demo").then((module) => ({ default: module.SidebarDemo })));

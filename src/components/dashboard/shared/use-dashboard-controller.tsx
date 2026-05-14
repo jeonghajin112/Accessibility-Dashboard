@@ -4,9 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import type { SidebarItem } from "@/components/ui/sidebar";
 import { buildApiUrl } from "@/config/api";
-import type { CreateEvaluationTargetInput as CreateEvaluationTargetModelInput, DashboardApiResponse, DashboardViewModel, MenuType } from "@/types/accessibility-domain";
+import { fetchDashboardViewModel } from "@/services/backend-api";
+import type { CreateEvaluationTargetInput as CreateEvaluationTargetModelInput, DashboardViewModel, MenuType } from "@/types/accessibility-domain";
 
-import { mapDashboardResponseToViewModel } from "./data-mappers";
 import type { DashboardRouteState } from "./types";
 import { useDashboardTheme } from "./use-dashboard-theme";
 import { formatDateTime } from "./utils";
@@ -38,29 +38,6 @@ function parseDashboardRoute(pathname: string): DashboardRouteState {
     selectedOrganizationModelId: null,
     selectedEvaluationTargetModelId: null
   };
-}
-
-const requiredDashboardResponseCollections = [
-  "organizations",
-  "evaluation_targets",
-  "evaluation_requests",
-  "analysis_results",
-  "issue_results",
-  "score_results"
-] as const;
-
-function isDashboardApiResponse(payload: unknown): payload is DashboardApiResponse {
-  if (payload === null || typeof payload !== "object") {
-    return false;
-  }
-
-  const record = payload as Record<string, unknown>;
-  const hasRequiredCollections = requiredDashboardResponseCollections.every((key) => Array.isArray(record[key]));
-  const hasValidOptionalCollections =
-    (record.score_details === undefined || Array.isArray(record.score_details)) &&
-    (record.improvement_guides === undefined || Array.isArray(record.improvement_guides));
-
-  return hasRequiredCollections && hasValidOptionalCollections;
 }
 
 export function useDashboardController({
@@ -107,29 +84,7 @@ export function useDashboardController({
       }
 
       try {
-        const response = await fetch(buildApiUrl("/dashboard"), {
-          method: "GET",
-          headers: {
-            Accept: "application/json"
-          },
-          signal
-        });
-
-        const payload: unknown = await response.json();
-
-        if (!response.ok) {
-          const message =
-            payload !== null && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
-              ? payload.error
-              : `HTTP ${response.status}`;
-          throw new Error(message);
-        }
-
-        if (!isDashboardApiResponse(payload)) {
-          throw new Error("대시보드 응답 형식이 올바르지 않습니다.");
-        }
-
-        setDashboardData(mapDashboardResponseToViewModel(payload));
+        setDashboardData(await fetchDashboardViewModel(signal));
         setDashboardError("");
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
@@ -188,7 +143,7 @@ export function useDashboardController({
     }
 
     return (
-      selectedOrganizationModel.evaluation_targets.find((target) => target.id === routeState.selectedEvaluationTargetModelId) ?? null
+      selectedOrganizationModel.evaluationTargets.find((target) => target.id === routeState.selectedEvaluationTargetModelId) ?? null
     );
   }, [routeState.selectedEvaluationTargetModelId, selectedOrganizationModel]);
 
@@ -223,7 +178,7 @@ export function useDashboardController({
       return;
     }
 
-    const siteStillExists = selectedOrganizationModel.evaluation_targets.some(
+    const siteStillExists = selectedOrganizationModel.evaluationTargets.some(
       (target) => target.id === routeState.selectedEvaluationTargetModelId
     );
     if (!siteStillExists) {
@@ -331,7 +286,7 @@ export function useDashboardController({
   );
 
   const handleCreateEvaluationTargetModel = useCallback(
-    async ({ projectId, name, access_url }: CreateEvaluationTargetModelInput) => {
+    async ({ projectId, name, accessUrl }: CreateEvaluationTargetModelInput) => {
       const response = await fetch(buildApiUrl(`/organizations/${projectId}/evaluation-targets`), {
         method: "POST",
         headers: {
@@ -340,7 +295,7 @@ export function useDashboardController({
         },
         body: JSON.stringify({
           name,
-          access_url
+          accessUrl
         })
       });
 
@@ -363,12 +318,12 @@ export function useDashboardController({
       projectId,
       siteId,
       name,
-      access_url
+      accessUrl
     }: {
       projectId: number;
       siteId: number;
       name: string;
-      access_url: string;
+      accessUrl: string;
     }) => {
       const response = await fetch(buildApiUrl(`/organizations/${projectId}/evaluation-targets/${siteId}`), {
         method: "PATCH",
@@ -378,7 +333,7 @@ export function useDashboardController({
         },
         body: JSON.stringify({
           name,
-          access_url
+          accessUrl
         })
       });
 
@@ -502,7 +457,7 @@ export function useDashboardController({
             ? selectedOrganizationModel.name
             : "프로젝트";
   const headerDescription = isSiteDetailView
-    ? selectedEvaluationTargetModel.access_url
+    ? selectedEvaluationTargetModel.accessUrl
     : isProjectDetailView
       ? selectedOrganizationModel.description || "설명이 없습니다."
       : "";
@@ -512,13 +467,13 @@ export function useDashboardController({
       return "";
     }
 
-    const latestUpdatedAt = (dashboardData?.evaluation_requests ?? [])
-      .filter((request) => request.evaluation_target_id === selectedEvaluationTargetModel.id)
-      .map((request) => request.updated_at)
+    const latestUpdatedAt = (dashboardData?.evaluationRequests ?? [])
+      .filter((request) => request.evaluationTargetId === selectedEvaluationTargetModel.id)
+      .map((request) => request.updatedAt)
       .sort((a, b) => Date.parse(b) - Date.parse(a))[0];
 
     return latestUpdatedAt ? formatDateTime(latestUpdatedAt) : "스캔 기록 없음";
-  }, [dashboardData?.evaluation_requests, isSiteDetailView, selectedEvaluationTargetModel]);
+  }, [dashboardData?.evaluationRequests, isSiteDetailView, selectedEvaluationTargetModel]);
 
   const goToProject = useCallback(
     (projectId: number) => {

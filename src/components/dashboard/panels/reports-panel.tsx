@@ -23,7 +23,7 @@ export function ReportsPanel({
   }
 
   const latestScoreResults = [...scoreResults]
-    .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
+    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
     .slice(0, 3);
   const topIssues = buildTopIssueSummaries(issueResults).slice(0, 3);
 
@@ -34,7 +34,7 @@ export function ReportsPanel({
         <ul className="list-disc space-y-2 pl-5 text-sm text-slate-600">
           {latestScoreResults.map((scoreResult) => (
             <li key={scoreResult.id}>
-              스캔 #{scoreResult.evaluation_request_id} - {getScoreGrade(scoreResult.total_score)} ({scoreResult.total_score}점)
+              스캔 #{scoreResult.evaluationRequestId} - {getScoreGrade(scoreResult.totalScore)} ({scoreResult.totalScore}점)
             </li>
           ))}
         </ul>
@@ -43,8 +43,8 @@ export function ReportsPanel({
         <h3 className="mb-3 text-base font-semibold text-slate-900">권장 조치</h3>
         <ul className="list-disc space-y-2 pl-5 text-sm text-slate-600">
           {topIssues.map((issue) => (
-            <li key={`${issue.issue_code}-${issue.severity}-advice`}>
-              {issue.issue_code} 개선 ({issue.severity})
+            <li key={`${issue.issueCode}-${issue.severity}-advice`}>
+              {issue.issueCode} 개선 ({issue.severity})
             </li>
           ))}
         </ul>

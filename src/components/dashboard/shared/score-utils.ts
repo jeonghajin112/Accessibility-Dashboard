@@ -2,14 +2,14 @@ import type { IssueResultModel, ScoreDetail, ScoreResult, SeverityLevel } from "
 import { toMonthKey } from "./utils";
 
 export type TopIssueSummary = {
-  issue_code: string;
+  issueCode: string;
   severity: SeverityLevel;
   count: number;
 };
 
 export type MonthlyScoreSummary = {
   month: string;
-  average_score: number;
+  averageScore: number;
 };
 
 export function getScoreGrade(score: number): string {
@@ -29,9 +29,12 @@ export function buildScoreDetailMap(scoreDetails: ScoreDetail[]): Map<number, Re
   const detailMap = new Map<number, Record<string, number>>();
 
   for (const detail of scoreDetails) {
-    const current = detailMap.get(detail.score_result_id) ?? {};
+    if (typeof detail.scoreResultId !== "number") {
+      continue;
+    }
+    const current = detailMap.get(detail.scoreResultId) ?? {};
     current[detail.category] = detail.score;
-    detailMap.set(detail.score_result_id, current);
+    detailMap.set(detail.scoreResultId, current);
   }
 
   return detailMap;
@@ -41,13 +44,13 @@ export function buildTopIssueSummaries(issueResults: IssueResultModel[]): TopIss
   const topIssueMap = new Map<string, TopIssueSummary>();
 
   for (const issue of issueResults) {
-    const key = `${issue.issue_code}:${issue.severity}`;
+    const key = `${issue.issueCode}:${issue.severity}`;
     const current = topIssueMap.get(key);
     if (current) {
       current.count += 1;
     } else {
       topIssueMap.set(key, {
-        issue_code: issue.issue_code,
+        issueCode: issue.issueCode,
         severity: issue.severity,
         count: 1
       });
@@ -61,13 +64,13 @@ export function buildMonthlyScoreSummaries(scoreResults: ScoreResult[]): Monthly
   const monthMap = new Map<string, { total: number; count: number }>();
 
   for (const scoreResult of scoreResults) {
-    const month = toMonthKey(scoreResult.updated_at);
+    const month = toMonthKey(scoreResult.updatedAt);
     const current = monthMap.get(month);
     if (current) {
-      current.total += scoreResult.total_score;
+      current.total += scoreResult.totalScore;
       current.count += 1;
     } else {
-      monthMap.set(month, { total: scoreResult.total_score, count: 1 });
+      monthMap.set(month, { total: scoreResult.totalScore, count: 1 });
     }
   }
 
@@ -75,6 +78,6 @@ export function buildMonthlyScoreSummaries(scoreResults: ScoreResult[]): Monthly
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([month, value]) => ({
       month,
-      average_score: Math.round(value.total / value.count)
+      averageScore: Math.round(value.total / value.count)
     }));
 }

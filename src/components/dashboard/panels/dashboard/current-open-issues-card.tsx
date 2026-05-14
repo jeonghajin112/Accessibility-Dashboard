@@ -66,7 +66,7 @@ export function CurrentOpenIssuesCard({
       </div>
 
       <div className="relative mt-2 flex min-h-0 flex-1 flex-col overflow-visible rounded-[28px] bg-white pt-3">
-        <div className="min-w-0 px-4">
+        <div className="min-w-0 px-5">
           <p className="text-[11px] font-semibold tracking-[0.08em]" style={{ color: labelColor }}>
             심각도별 비율
           </p>
@@ -81,7 +81,7 @@ export function CurrentOpenIssuesCard({
           </p>
         </div>
 
-        <div ref={severityBarRef} className="relative mt-auto flex min-h-[156px] flex-col justify-center gap-2 px-4 pb-3">
+        <div ref={severityBarRef} className="relative mt-auto flex min-h-[156px] flex-col justify-center gap-2 px-5 pb-3">
           <div
             role="img"
             aria-label={`현재 미해결 이슈 ${issueCount}건. ${rows
@@ -97,11 +97,11 @@ export function CurrentOpenIssuesCard({
               <div className="grid min-w-0 grid-cols-4 gap-3">
                 {rows.map((segment) => (
                   <div key={segment.severity} className="flex min-w-0 flex-col items-center">
-                    <div className="flex h-20 w-full items-end">
+                    <div className="flex h-20 w-full items-end justify-center">
                       <motion.button
                         type="button"
                         aria-label={`${segment.label} ${segment.count}건, ${segment.roundedPercentage}%`}
-                        className="flex w-full cursor-pointer items-start justify-center rounded-xl border border-white/10 px-1 pt-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                        className="flex w-[88%] cursor-pointer items-start justify-center rounded-xl border border-white/10 px-1 pt-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
                         style={{
                           backgroundColor: segment.color,
                           opacity:
