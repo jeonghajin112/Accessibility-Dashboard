@@ -279,7 +279,11 @@ export function DashboardPanel({
         return typeof requestId === "number" && latestRequestIds.has(requestId);
       })
     : (data.issueResults ?? []);
-  const baseIssueCategoryKeys = ["perceivable", "operable", "understandable", "robust"] as const;
+  const issueRatioCategories = [
+    { category: "cv", label: "시각" },
+    { category: "difficulty", label: "텍스트" },
+    { category: "rule_based", label: "규칙" }
+  ] as const;
   const emptyIssueCategorySummary = {
     count: 0,
     CRITICAL: 0,
@@ -287,9 +291,9 @@ export function DashboardPanel({
     MEDIUM: 0,
     LOW: 0
   };
-  const categoryRows = baseIssueCategoryKeys.map((category) => ({
+  const categoryRows = issueRatioCategories.map(({ category, label }) => ({
     category,
-    label: categoryLabelMap[category] ?? category,
+    label,
     ...emptyIssueCategorySummary
   }));
   const totalCategoryCount = categoryRows.reduce((sum, row) => sum + row.count, 0);
@@ -489,6 +493,8 @@ export function DashboardPanel({
   const wcagViolationPages = wcagViolationRows.slice(0, 5);
   const activeWcagViolationPage = Math.min(wcagViolationPage, Math.max(wcagViolationPages.length - 1, 0));
   const activeWcagViolation = wcagViolationPages[activeWcagViolationPage] ?? null;
+  const canMoveWcagViolationBackward = activeWcagViolationPage > 0;
+  const canMoveWcagViolationForward = activeWcagViolationPage < wcagViolationPages.length - 1;
   const handleWcagViolationPageChange = (nextPage: number) => {
     if (nextPage === activeWcagViolationPage) {
       return;
@@ -992,10 +998,46 @@ export function DashboardPanel({
                     )}
                   </div>
                 </div>
+                {wcagViolationPages.length > 1 && (
+                  <nav className="flex shrink-0 items-center gap-1" aria-label="반복 이슈 유형 이동">
+                    <button
+                      type="button"
+                      aria-label="이전 반복 이슈 유형"
+                      disabled={!canMoveWcagViolationBackward}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-slate-600 transition hover:bg-slate-200/80 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:bg-slate-200/80"
+                      onClick={() => handleWcagViolationPageChange(activeWcagViolationPage - 1)}
+                    >
+                      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path
+                          d="M22.499 12.85a.9.9 0 0 1 .57.205l.067.06a.9.9 0 0 1 .06 1.206l-.06.066-5.585 5.586-.028.027.028.027 5.585 5.587a.9.9 0 0 1 .06 1.207l-.06.066a.9.9 0 0 1-1.207.06l-.066-.06-6.25-6.25a1 1 0 0 1-.158-.212l-.038-.08a.9.9 0 0 1-.03-.606l.03-.083a1 1 0 0 1 .137-.226l.06-.066 6.25-6.25a.9.9 0 0 1 .635-.263Z"
+                          fill="currentColor"
+                          stroke="currentColor"
+                          strokeWidth=".078"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="다음 반복 이슈 유형"
+                      disabled={!canMoveWcagViolationForward}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-slate-600 transition hover:bg-slate-200/80 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:bg-slate-200/80"
+                      onClick={() => handleWcagViolationPageChange(activeWcagViolationPage + 1)}
+                    >
+                      <svg className="rotate-180" width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path
+                          d="M22.499 12.85a.9.9 0 0 1 .57.205l.067.06a.9.9 0 0 1 .06 1.206l-.06.066-5.585 5.586-.028.027.028.027 5.585 5.587a.9.9 0 0 1 .06 1.207l-.06.066a.9.9 0 0 1-1.207.06l-.066-.06-6.25-6.25a1 1 0 0 1-.158-.212l-.038-.08a.9.9 0 0 1-.03-.606l.03-.083a1 1 0 0 1 .137-.226l.06-.066 6.25-6.25a.9.9 0 0 1 .635-.263Z"
+                          fill="currentColor"
+                          stroke="currentColor"
+                          strokeWidth=".078"
+                        />
+                      </svg>
+                    </button>
+                  </nav>
+                )}
               </div>
 
               {activeWcagViolation ? (
-                <div className="mt-2 flex min-h-0 flex-1 flex-col">
+                <div className="relative mt-2 flex min-h-0 flex-1 flex-col">
                   <motion.div
                     key={activeWcagViolation.issueCode}
                     custom={wcagViolationDirection}
@@ -1006,47 +1048,31 @@ export function DashboardPanel({
                     className="flex min-h-0 flex-1 flex-col rounded-[28px] bg-white pt-3"
                   >
                     <div className="flex h-full flex-col px-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-semibold tracking-[0.08em]" style={{ color: "#64748b" }}>
-                            {activeWcagViolation.kwcagLabel}
-                          </p>
-                          <p
-                            className="mt-1 min-w-0 truncate pb-0.5 text-[1.32rem] font-bold leading-[1.15] text-slate-900"
-                            title={activeWcagViolation.label}
-                          >
-                            {activeWcagViolation.label}
-                          </p>
-                        </div>
-                        <p className="shrink-0 text-right text-[1.75rem] font-bold leading-none text-slate-900">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold tracking-[0.08em]" style={{ color: "#64748b" }}>
+                          {activeWcagViolation.kwcagLabel}
+                        </p>
+                        <p className="mt-1 text-[1.75rem] font-bold leading-none text-slate-900">
                           {activeWcagViolation.count}
-                          <span className="ml-1 text-base font-semibold text-slate-500">건</span>
+                          <span className="ml-1 text-xl font-semibold tracking-normal" style={{ color: currentScoreResultModelUnitColor }}>
+                            건
+                          </span>
                         </p>
                       </div>
-                      <p className="mt-auto line-clamp-2 text-[14px] font-medium leading-relaxed" style={{ color: "#64748b" }}>
-                        {activeWcagViolation.description}
-                      </p>
+                      <div className="mt-auto min-w-0 translate-y-[-24px]">
+                        <p
+                          className="line-clamp-1 text-[1.42rem] font-bold leading-tight text-slate-900"
+                          title={activeWcagViolation.label}
+                        >
+                          {activeWcagViolation.label}
+                        </p>
+                        <p className="mt-2 line-clamp-2 text-[17px] font-medium leading-relaxed" style={{ color: "#64748b" }}>
+                          {activeWcagViolation.description}
+                        </p>
+                      </div>
                     </div>
                   </motion.div>
 
-                  <div className="flex h-8 shrink-0 translate-y-1.5 items-center justify-center gap-1.5" aria-label="반복 이슈 유형 페이지">
-                    {wcagViolationPages.map((row, pageIndex) => {
-                      const isActive = pageIndex === activeWcagViolationPage;
-
-                      return (
-                        <button
-                          key={row.issueCode}
-                          type="button"
-                          aria-label={`${pageIndex + 1}번째 반복 이슈 유형 보기`}
-                          aria-current={isActive ? "page" : undefined}
-                          className="recent-scan-pager-button inline-flex h-5 w-5 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
-                          onClick={() => handleWcagViolationPageChange(pageIndex)}
-                        >
-                          <span aria-hidden="true" className={`recent-scan-pager-dot${isActive ? " is-active" : ""}`} />
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
               ) : (
                 <div className="mt-2 flex min-h-0 flex-1 items-center justify-center rounded-[28px] bg-white p-2 text-sm font-semibold text-slate-500">
@@ -1388,18 +1414,20 @@ export function DashboardPanel({
                     </div>
 
                     <div className="mt-auto h-[122px]">
-                      <div className="relative grid h-[76px] grid-cols-4 items-end gap-3 border-b border-slate-200/70">
-                        {latestReportSeverityBars.map((bar) => (
-                          <div key={bar.severity} className="flex h-full min-w-0 items-end justify-center">
-                            <motion.div
-                              className="w-5 rounded-md rounded-b-none"
-                              style={{ backgroundColor: bar.color }}
-                              initial={{ height: 0 }}
-                              animate={{ height: `${bar.heightPercentage}%` }}
-                              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                            />
-                          </div>
-                        ))}
+                      <div className="relative h-[78px] border-b border-slate-200/70">
+                        <div className="grid h-full grid-cols-4 items-end gap-3 pb-0">
+                          {latestReportSeverityBars.map((bar) => (
+                            <div key={bar.severity} className="flex h-full min-w-0 items-end justify-center">
+                              <motion.div
+                                className="w-5 rounded-md"
+                                style={{ backgroundColor: bar.color }}
+                                initial={{ height: 0 }}
+                                animate={{ height: `${bar.heightPercentage}%` }}
+                                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       <div className="grid grid-cols-4 gap-3 pt-3 text-center">
                         {latestReportSeverityBars.map((bar) => (
@@ -1516,7 +1544,7 @@ export function DashboardPanel({
                         </motion.svg>
                       </div>
 
-                      <div className="grid w-full max-w-[300px] grid-cols-2 items-center justify-items-center gap-x-4 gap-y-1 text-center">
+                      <div className="flex w-full max-w-[300px] items-center justify-center gap-5 text-center">
                         {donutSegments.map((segment) => (
                           <div
                             key={segment.category}

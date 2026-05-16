@@ -81,7 +81,7 @@ export function CurrentOpenIssuesCard({
           </p>
         </div>
 
-        <div ref={severityBarRef} className="relative mt-auto flex min-h-[156px] flex-col justify-center gap-2 px-5 pb-3">
+        <div ref={severityBarRef} className="relative mt-auto flex min-h-[156px] flex-col justify-center gap-2 px-8 pb-3">
           <div
             role="img"
             aria-label={`현재 미해결 이슈 ${issueCount}건. ${rows
@@ -94,54 +94,61 @@ export function CurrentOpenIssuesCard({
                 미해결 이슈가 없습니다.
               </div>
             ) : (
-              <div className="grid min-w-0 grid-cols-4 gap-3">
-                {rows.map((segment) => (
-                  <div key={segment.severity} className="flex min-w-0 flex-col items-center">
-                    <div className="flex h-20 w-full items-end justify-center">
-                      <motion.button
-                        type="button"
-                        aria-label={`${segment.label} ${segment.count}건, ${segment.roundedPercentage}%`}
-                        className="flex w-[88%] cursor-pointer items-start justify-center rounded-xl border border-white/10 px-1 pt-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
-                        style={{
-                          backgroundColor: segment.color,
-                          opacity:
-                            hoveredSeveritySegment?.severity === segment.severity ? 0.98 : hoveredSeveritySegment ? 0.68 : 0.84
-                        }}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${segment.heightPercentage}%` }}
-                        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-                        onMouseMove={(event) => {
-                          const tooltipPosition = getFloatingSeverityTooltipPosition(event.clientX + 12, event.clientY - 18);
-                          setHoveredSeveritySegment({
-                            severity: segment.severity,
-                            x: tooltipPosition.x,
-                            y: tooltipPosition.y
-                          });
-                        }}
-                        onFocus={(event) => {
-                          const segmentRect = event.currentTarget.getBoundingClientRect();
-                          const tooltipPosition = getFloatingSeverityTooltipPosition(
-                            segmentRect.left + segmentRect.width / 2,
-                            segmentRect.top - 18
-                          );
-                          setHoveredSeveritySegment({
-                            severity: segment.severity,
-                            x: tooltipPosition.x,
-                            y: tooltipPosition.y
-                          });
-                        }}
-                        onMouseLeave={() => setHoveredSeveritySegment(null)}
-                        onBlur={() => setHoveredSeveritySegment(null)}
-                      />
+              <div className="min-w-0">
+                <div className="grid min-w-0 grid-cols-4 gap-4">
+                  {rows.map((segment) => (
+                    <div key={`${segment.severity}-bar`} className="flex min-w-0 flex-col items-center">
+                      <div className="flex h-20 w-full items-end justify-center">
+                        <motion.button
+                          type="button"
+                          aria-label={`${segment.label} ${segment.count}건, ${segment.roundedPercentage}%`}
+                          className="flex w-[78%] cursor-pointer items-start justify-center rounded-xl border border-white/10 px-1 pt-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                          style={{
+                            backgroundColor: segment.color,
+                            opacity:
+                              hoveredSeveritySegment?.severity === segment.severity ? 0.98 : hoveredSeveritySegment ? 0.68 : 0.84
+                          }}
+                          initial={{ height: 0 }}
+                          animate={{ height: `${segment.heightPercentage}%` }}
+                          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                          onMouseMove={(event) => {
+                            const tooltipPosition = getFloatingSeverityTooltipPosition(event.clientX + 12, event.clientY - 18);
+                            setHoveredSeveritySegment({
+                              severity: segment.severity,
+                              x: tooltipPosition.x,
+                              y: tooltipPosition.y
+                            });
+                          }}
+                          onFocus={(event) => {
+                            const segmentRect = event.currentTarget.getBoundingClientRect();
+                            const tooltipPosition = getFloatingSeverityTooltipPosition(
+                              segmentRect.left + segmentRect.width / 2,
+                              segmentRect.top - 18
+                            );
+                            setHoveredSeveritySegment({
+                              severity: segment.severity,
+                              x: tooltipPosition.x,
+                              y: tooltipPosition.y
+                            });
+                          }}
+                          onMouseLeave={() => setHoveredSeveritySegment(null)}
+                          onBlur={() => setHoveredSeveritySegment(null)}
+                        />
+                      </div>
                     </div>
-                    <p className="mt-1 truncate text-[11px] font-semibold" style={{ color: "#64748b" }}>
-                      {segment.label}
-                    </p>
-                    <p className="mt-0.5 text-xs font-bold text-slate-900">
-                      {segment.roundedPercentage}%
-                    </p>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <div className="mt-0 h-px w-full bg-slate-200/80" />
+                <div className="mt-1 grid min-w-0 grid-cols-4 gap-4">
+                  {rows.map((segment) => (
+                    <div key={`${segment.severity}-label`} className="min-w-0 text-center">
+                      <p className="text-xs font-bold text-slate-900">{segment.roundedPercentage}%</p>
+                      <p className="mt-0.5 truncate text-[11px] font-semibold" style={{ color: "#64748b" }}>
+                        {segment.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
