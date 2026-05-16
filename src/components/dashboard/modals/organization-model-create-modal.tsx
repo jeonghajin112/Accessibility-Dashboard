@@ -57,7 +57,7 @@ export function OrganizationModelCreateModal({
 
         <div className="mt-4 space-y-4">
           <label className="block">
-            <span className={`mb-1 block text-sm font-medium ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>프로젝트 이름</span>
+            <span className={`mb-1 block text-sm font-semibold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>프로젝트 이름</span>
             <input
               value={name}
               onChange={(event) => onNameChange(event.target.value)}
@@ -71,7 +71,7 @@ export function OrganizationModelCreateModal({
           </label>
 
           <label className="block">
-            <span className={`mb-1 block text-sm font-medium ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>설명</span>
+            <span className={`mb-1 block text-sm font-semibold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>설명</span>
             <textarea
               value={description}
               onChange={(event) => onDescriptionChange(event.target.value)}
@@ -106,8 +106,8 @@ export function OrganizationModelCreateModal({
             }}
             className={`inline-flex h-9 items-center rounded-lg px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60 ${
               isDarkMode
-                ? "border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
-                : "bg-slate-900 font-semibold text-white hover:bg-slate-800"
+                ? "border border-transparent bg-[#ef6a50] font-semibold text-white hover:bg-[#e85d43]"
+                : "bg-[#ef6a50] font-semibold text-white hover:bg-[#e85d43]"
             }`}
           >
             {isSubmitting ? "생성 중..." : "생성"}

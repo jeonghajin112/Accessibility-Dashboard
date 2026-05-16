@@ -208,8 +208,8 @@ export function SidebarLink({
   const baseClass = cn(
     "sidebar-nav-link group flex h-10 w-full items-center gap-2 rounded-xl border px-2.5 text-left transition",
     link.active
-      ? "border-transparent bg-transparent text-slate-900"
-      : "border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-700",
+      ? "sidebar-nav-link-active border-transparent bg-transparent text-slate-900"
+      : "border-transparent bg-transparent text-[var(--dashboard-sidebar-muted-text)] hover:border-slate-200 hover:bg-slate-100 hover:text-[var(--dashboard-sidebar-hover-text)]",
     className
   );
 

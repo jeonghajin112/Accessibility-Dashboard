@@ -595,13 +595,15 @@
   .bridge-dashboard.theme-light .sidebar-nav-link {
     border-radius: 999px !important;
     color: var(--dashboard-sidebar-muted-text) !important;
+    font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
   }
 
   .bridge-dashboard .dashboard-sidebar-brand {
     color: var(--dashboard-sidebar-muted-text) !important;
+    font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
   }
 
-  .bridge-dashboard.theme-light .sidebar-nav-link.text-slate-900 {
+  .bridge-dashboard.theme-light .sidebar-nav-link.sidebar-nav-link-active {
     background-color: var(--dashboard-sidebar-active-bg) !important;
     color: var(--dashboard-sidebar-active-text) !important;
     box-shadow: none !important;
@@ -613,7 +615,7 @@
     color: var(--dashboard-sidebar-hover-text) !important;
   }
 
-  .bridge-dashboard.theme-light .sidebar-nav-link.text-slate-900:hover {
+  .bridge-dashboard.theme-light .sidebar-nav-link.sidebar-nav-link-active:hover {
     background-color: var(--dashboard-sidebar-active-bg) !important;
     color: var(--dashboard-sidebar-active-text) !important;
   }

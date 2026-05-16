@@ -1,7 +1,7 @@
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { ToggleTheme } from "@/components/ui/toggle-theme";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
-import { LogOut, RefreshCw } from "lucide-react";
+import { LogOut, Plus, RefreshCw } from "lucide-react";
 import { Suspense, lazy, useState } from "react";
 
 import { OrganizationModelCreateModal } from "./modals/organization-model-create-modal";
@@ -34,9 +34,11 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
   const [open, setOpen] = useState(false);
   const dashboard = useDashboardController({ onBootstrapComplete });
   const isDashboardHome = dashboard.menu === "dashboard";
+  const isProjectsRoot = dashboard.menu === "projects" && !dashboard.selectedOrganizationModel;
+  const shouldShowLargeHeaderTitle = isDashboardHome || isProjectsRoot;
   const shouldShowHeaderTitle =
-    dashboard.menu !== "dashboard" && !(dashboard.menu === "projects" && !dashboard.selectedOrganizationModel);
-  const hasCompactTopZone = !isDashboardHome && !shouldShowHeaderTitle;
+    dashboard.menu !== "dashboard" && !isProjectsRoot;
+  const hasCompactTopZone = !shouldShowLargeHeaderTitle && !shouldShowHeaderTitle;
   const shouldShowSiteHeaderActions =
     dashboard.menu === "projects" && Boolean(dashboard.selectedEvaluationTargetModel);
 
@@ -142,8 +144,23 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
             </div>
           </header>
 
-          <div className={`dashboard-date-widget absolute ${isDashboardHome ? "flex" : "hidden"} flex-wrap items-center`}>
-            <h1 className="dashboard-home-title font-black tracking-tight text-slate-900">Dashboard</h1>
+          <div className={`dashboard-date-widget absolute ${shouldShowLargeHeaderTitle ? "flex" : "hidden"} flex-wrap items-center`}>
+            <h1 className="dashboard-home-title font-black tracking-tight text-slate-900">
+              {isProjectsRoot ? "Project" : "Dashboard"}
+            </h1>
+            {isProjectsRoot && (
+              <>
+                <span className="ml-6 inline-flex h-11 w-px shrink-0 translate-y-1 self-center bg-slate-300" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={dashboard.openOrganizationCreateModal}
+                  className="project-header-create-trigger ml-4 inline-flex h-11 shrink-0 translate-y-1 items-center gap-2 rounded-2xl border border-transparent bg-[#ef6a50] px-5 text-sm font-bold text-white transition hover:bg-[#e85d43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef6a50]/30"
+                >
+                  <Plus size={18} strokeWidth={2.4} className="-ml-2" />
+                  프로젝트 추가
+                </button>
+              </>
+            )}
             {/*
               접근성 검사 시작
             */}
@@ -197,7 +214,6 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
                     onUpdateOrganizationModel={dashboard.handleUpdateOrganizationModel}
                     onDeleteOrganizationModel={dashboard.handleDeleteOrganizationModel}
                     onOrganizationModelClick={dashboard.goToProject}
-                    onGoToCreatePage={dashboard.openOrganizationCreateModal}
                   />
                 )}
               </>

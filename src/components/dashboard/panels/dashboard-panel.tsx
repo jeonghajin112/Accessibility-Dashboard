@@ -51,6 +51,20 @@ const wcagPageTransitionVariants = {
 };
 
 function getIssueCategoryKey(issueCode: string): "perceivable" | "operable" | "understandable" | "robust" {
+  const kwcagGroup = issueCode.trim().match(/^([5-8])(?:\.|$)/)?.[1];
+  if (kwcagGroup === "5") {
+    return "perceivable";
+  }
+  if (kwcagGroup === "6") {
+    return "operable";
+  }
+  if (kwcagGroup === "7") {
+    return "understandable";
+  }
+  if (kwcagGroup === "8") {
+    return "robust";
+  }
+
   if (issueCode === "5.1.1" || issueCode.includes("contrast") || issueCode.includes("alt")) {
     return "perceivable";
   }
@@ -279,11 +293,7 @@ export function DashboardPanel({
         return typeof requestId === "number" && latestRequestIds.has(requestId);
       })
     : (data.issueResults ?? []);
-  const issueRatioCategories = [
-    { category: "cv", label: "시각" },
-    { category: "difficulty", label: "텍스트" },
-    { category: "rule_based", label: "규칙" }
-  ] as const;
+  const baseIssueCategoryKeys = ["perceivable", "operable", "understandable", "robust"] as const;
   const emptyIssueCategorySummary = {
     count: 0,
     CRITICAL: 0,
@@ -291,11 +301,21 @@ export function DashboardPanel({
     MEDIUM: 0,
     LOW: 0
   };
-  const categoryRows = issueRatioCategories.map(({ category, label }) => ({
+  const categoryRows = baseIssueCategoryKeys.map((category) => ({
     category,
-    label,
+    label: categoryLabelMap[category] ?? category,
     ...emptyIssueCategorySummary
   }));
+  const categoryRowByKey = new Map(categoryRows.map((row) => [row.category, row]));
+  for (const issue of currentIssueResults) {
+    const category = getIssueCategoryKey(issue.issueCode);
+    const categoryRow = categoryRowByKey.get(category);
+    if (!categoryRow) {
+      continue;
+    }
+    categoryRow.count += 1;
+    categoryRow[issue.severity] += 1;
+  }
   const totalCategoryCount = categoryRows.reduce((sum, row) => sum + row.count, 0);
   const categoryColors = chartTokens.donutPalette;
   const categoryPercentages = (() => {
@@ -1544,7 +1564,7 @@ export function DashboardPanel({
                         </motion.svg>
                       </div>
 
-                      <div className="flex w-full max-w-[300px] items-center justify-center gap-5 text-center">
+                      <div className="grid w-full max-w-[300px] grid-cols-2 items-center justify-items-center gap-x-4 gap-y-1 text-center">
                         {donutSegments.map((segment) => (
                           <div
                             key={segment.category}

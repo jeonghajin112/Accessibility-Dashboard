@@ -91,8 +91,8 @@ const improvementGuides = [];
 
 const issueTemplates = [
   {
-    issueCode: "color-contrast",
-    issueTitle: "Insufficient contrast",
+    issueCode: "5.3.3",
+    issueTitle: "콘텐츠의 명도 대비",
     severity: "CRITICAL",
     locationPath: ".notice",
     message: "본문 텍스트 대비가 기준보다 낮습니다.",
@@ -113,8 +113,8 @@ const issueTemplates = [
     recommendation: "장식 이미지는 빈 alt를, 정보 이미지는 구체적인 설명을 사용하세요."
   },
   {
-    issueCode: "label-missing",
-    issueTitle: "Form label missing",
+    issueCode: "7.1.1",
+    issueTitle: "입력 도움",
     severity: "MEDIUM",
     locationPath: "input[type='text']",
     message: "입력 필드와 연결된 레이블이 없습니다.",
@@ -124,8 +124,8 @@ const issueTemplates = [
     recommendation: "placeholder만으로 입력 목적을 안내하지 마세요."
   },
   {
-    issueCode: "heading-order",
-    issueTitle: "Heading order skipped",
+    issueCode: "6.1.2",
+    issueTitle: "제목 제공",
     severity: "LOW",
     locationPath: "h4.section-title",
     message: "제목 레벨이 순차적이지 않습니다.",

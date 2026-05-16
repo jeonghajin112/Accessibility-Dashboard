@@ -27,8 +27,8 @@
     --dashboard-header-shadow: 0 14px 28px rgba(17, 17, 17, 0.14);
     --dashboard-sidebar-active-bg: #111111;
     --dashboard-sidebar-active-text: #ffffff;
-    --dashboard-sidebar-muted-text: #64748b;
-    --dashboard-sidebar-hover-text: #475569;
+    --dashboard-sidebar-muted-text: #111111;
+    --dashboard-sidebar-hover-text: #111111;
     --dashboard-menu-trigger-bg: rgba(255, 255, 255, 0.8);
     --dashboard-menu-trigger-text: #0f172a;
     --dashboard-date-day-bg: transparent;

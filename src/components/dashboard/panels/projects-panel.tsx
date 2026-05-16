@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -15,8 +15,7 @@ export function OrganizationModelsPanel({
   isDarkMode,
   onUpdateOrganizationModel,
   onDeleteOrganizationModel,
-  onOrganizationModelClick,
-  onGoToCreatePage
+  onOrganizationModelClick
 }: {
   organizations: OrganizationModel[];
   isLoading: boolean;
@@ -25,7 +24,6 @@ export function OrganizationModelsPanel({
   onUpdateOrganizationModel: (input: { projectId: number; name: string; description: string }) => Promise<void>;
   onDeleteOrganizationModel: (projectId: number) => Promise<void>;
   onOrganizationModelClick: (projectId: number) => void;
-  onGoToCreatePage: () => void;
 }) {
   const [sortConfig, setSortConfig] = useState<{
     key: "name" | "targetSites" | "updatedAt";
@@ -201,17 +199,6 @@ export function OrganizationModelsPanel({
 
   return (
     <div className="-mt-2 space-y-0">
-      <div className="pointer-events-none relative z-10 -mb-4 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={onGoToCreatePage}
-          className="project-create-trigger pointer-events-auto inline-flex h-8 items-center gap-1.5 rounded-lg border border-white bg-white px-2 text-[13px] font-semibold text-slate-950 transition"
-        >
-          <Plus size={16} />
-          프로젝트 추가
-        </button>
-      </div>
-
       {organizations.length === 0 ? (
         <PanelMessage label="등록된 프로젝트가 없습니다." />
       ) : (
@@ -384,7 +371,7 @@ export function OrganizationModelsPanel({
 
                 <div className="mt-4 space-y-4">
                   <label className="block">
-                    <span className={`mb-1 block text-sm font-medium ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>프로젝트 이름</span>
+                    <span className={`mb-1 block text-sm font-semibold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>프로젝트 이름</span>
                     <input
                       value={editOrganizationModelName}
                       onChange={(event) => setEditOrganizationModelName(event.target.value)}
@@ -398,7 +385,7 @@ export function OrganizationModelsPanel({
                   </label>
 
                   <label className="block">
-                    <span className={`mb-1 block text-sm font-medium ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>설명</span>
+                    <span className={`mb-1 block text-sm font-semibold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>설명</span>
                     <textarea
                       value={editOrganizationModelDescription}
                       onChange={(event) => setEditOrganizationModelDescription(event.target.value)}
@@ -431,11 +418,11 @@ export function OrganizationModelsPanel({
                     onClick={() => {
                       void handleSaveOrganizationModel();
                     }}
-                    className={`inline-flex h-9 items-center rounded-lg px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60 ${
-                      isDarkMode
-                        ? "border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
-                        : "bg-slate-900 font-semibold text-white hover:bg-slate-800"
-                    }`}
+                      className={`inline-flex h-9 items-center rounded-lg px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60 ${
+                        isDarkMode
+                          ? "border border-transparent bg-[#ef6a50] font-semibold text-white hover:bg-[#e85d43]"
+                          : "bg-[#ef6a50] font-semibold text-white hover:bg-[#e85d43]"
+                      }`}
                   >
                     {isSavingOrganizationModel ? "저장 중..." : "저장"}
                   </button>
