@@ -5,16 +5,13 @@ import type {
   ImprovementGuide,
   IssueResultModel,
   OrganizationModel,
-  ScoreResult,
-  SeverityLevel
+  ScoreResult
 } from "@/types/accessibility-domain";
 
 import { getScoreGrade } from "../shared/score-utils";
 import { fallbackWcagCriterion, severityChartItems, wcagCriterionByIssueCode } from "./site-dashboard/constants";
 import { RecentIssuesCard } from "./site-dashboard/recent-issues-card";
 import { ScoreTrendCard } from "./site-dashboard/score-trend-card";
-import { SeverityIssueCountCard } from "./site-dashboard/severity-issue-count-card";
-import { SummaryStatCards } from "./site-dashboard/summary-stat-cards";
 import type { RecentIssueRow, ScoreChartItem, SiteSummaryItem } from "./site-dashboard/types";
 import { formatDateKey, formatDateLabel, formatShortDate, getAnalyzerTypeLabel, normalizeChartData } from "./site-dashboard/utils";
 
@@ -65,8 +62,6 @@ export function SiteDashboardPanel(props: SiteDashboardPanelProps) {
     latestRequestId === null
       ? []
       : issueResults.filter((issue) => requestIdByAnalysisResultId.get(issue.analysisResultId) === latestRequestId);
-  const issueSeverityRows = buildIssueSeverityRows(latestIssues);
-  const maxIssueSeverityCount = Math.max(...issueSeverityRows.map((row) => row.count), 1);
   const summaryItems = buildSummaryItems({
     latestCompletedScoreItem,
     totalEvaluationRequestCount: targetEvaluationRequests.length
@@ -85,14 +80,14 @@ export function SiteDashboardPanel(props: SiteDashboardPanelProps) {
     ? formatDateLabel(latestCompletedScoreItem.request.updatedAt)
     : "최근 평가 기준";
 
+  void recentIssueDateLabel;
+
   return (
-    <div className="grid min-h-0 items-stretch gap-3 lg:grid-cols-[minmax(0,38%)_148px_minmax(360px,1fr)]">
-      <div className="grid min-h-0 gap-3">
-        <ScoreTrendCard chartData={chartData} />
-        <SeverityIssueCountCard rows={issueSeverityRows} totalCount={latestIssues.length} maxCount={maxIssueSeverityCount} />
+    <div className="grid min-h-[calc(100vh-var(--dashboard-top-height)-9rem)] items-stretch gap-3 lg:grid-cols-2">
+      <div className="min-h-0">
+        <ScoreTrendCard chartData={chartData} summaryItems={summaryItems} />
       </div>
-      <SummaryStatCards items={summaryItems} />
-      <RecentIssuesCard rows={recentIssueRows} dateLabel={recentIssueDateLabel} />
+      <RecentIssuesCard rows={recentIssueRows} />
     </div>
   );
 }
@@ -126,27 +121,6 @@ function buildScoreChartData(
   }
 
   return normalizeChartData([...latestScoreByDate.values()].slice(-18));
-}
-
-function buildIssueSeverityRows(latestIssues: IssueResultModel[]) {
-  const issueSeverityCounts = latestIssues.reduce<Record<SeverityLevel, number>>(
-    (counts, issue) => {
-      counts[issue.severity] += 1;
-      return counts;
-    },
-    {
-      CRITICAL: 0,
-      HIGH: 0,
-      MEDIUM: 0,
-      LOW: 0
-    }
-  );
-
-  return severityChartItems.map((item) => ({
-    ...item,
-    count: issueSeverityCounts[item.key],
-    percent: latestIssues.length === 0 ? 0 : Math.round((issueSeverityCounts[item.key] / latestIssues.length) * 100)
-  }));
 }
 
 function buildSummaryItems({

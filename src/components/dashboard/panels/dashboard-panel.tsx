@@ -826,7 +826,7 @@ export function DashboardPanel({
   const radarGridStroke = isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(148, 163, 184, 0.16)";
   const radarAxisStroke = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(148, 163, 184, 0.18)";
   const radarLabelColor = isDarkMode ? "rgba(255, 255, 255, 0.72)" : "#64748b";
-  const legendText = isDarkMode ? chartTokens.legendText : "#64748b";
+  const legendText = isDarkMode ? "#94a3b8" : "#64748b";
   const activeLegendText = isDarkMode ? "#dbe4f3" : "#0f172a";
   return (
     <div className="space-y-3">
@@ -962,7 +962,7 @@ export function DashboardPanel({
                 {activeMonthlyPoint && hoveredMonthlyPoint && typeof document !== "undefined" && createPortal(
                   <div
                     role="tooltip"
-                    className="pointer-events-none fixed z-[9999] min-w-24 rounded-lg px-3 py-2 text-left shadow-[0_14px_32px_rgba(2,6,23,0.32)]"
+                    className="pointer-events-none fixed z-[9999] min-w-24 rounded-lg px-3 py-2 text-left"
                     style={{
                       left: hoveredMonthlyPoint.x,
                       top: hoveredMonthlyPoint.y,
@@ -1024,7 +1024,11 @@ export function DashboardPanel({
                       type="button"
                       aria-label="이전 반복 이슈 유형"
                       disabled={!canMoveWcagViolationBackward}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-slate-600 transition hover:bg-slate-200/80 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:bg-slate-200/80"
+                      className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent transition disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 ${
+                        isDarkMode
+                          ? "text-slate-500 hover:bg-white/10 hover:text-slate-100 focus-visible:bg-white/10 focus-visible:ring-white/15"
+                          : "text-slate-600 hover:bg-slate-200/80 focus-visible:bg-slate-200/80 focus-visible:ring-slate-300"
+                      }`}
                       onClick={() => handleWcagViolationPageChange(activeWcagViolationPage - 1)}
                     >
                       <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1040,7 +1044,11 @@ export function DashboardPanel({
                       type="button"
                       aria-label="다음 반복 이슈 유형"
                       disabled={!canMoveWcagViolationForward}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-slate-600 transition hover:bg-slate-200/80 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:bg-slate-200/80"
+                      className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent transition disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 ${
+                        isDarkMode
+                          ? "text-slate-500 hover:bg-white/10 hover:text-slate-100 focus-visible:bg-white/10 focus-visible:ring-white/15"
+                          : "text-slate-600 hover:bg-slate-200/80 focus-visible:bg-slate-200/80 focus-visible:ring-slate-300"
+                      }`}
                       onClick={() => handleWcagViolationPageChange(activeWcagViolationPage + 1)}
                     >
                       <svg className="rotate-180" width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1233,7 +1241,7 @@ export function DashboardPanel({
                   </div>
                   {hoveredRadarMetric && (
                     <div
-                      className="pointer-events-none absolute z-20 min-w-24 rounded-lg px-3 py-2 text-left shadow-[0_14px_32px_rgba(2,6,23,0.32)]"
+                      className="pointer-events-none absolute z-20 min-w-24 rounded-lg px-3 py-2 text-left"
                       style={{
                         left: hoveredRadarMetric.x,
                         top: hoveredRadarMetric.y,
@@ -1586,7 +1594,7 @@ export function DashboardPanel({
 
                       {activeDonutCategory && hoveredIssueInfo && (
                         <div
-                          className="pointer-events-none absolute z-20 min-w-28 rounded-lg px-3 py-3 text-left shadow-[0_14px_32px_rgba(2,6,23,0.32)]"
+                          className="pointer-events-none absolute z-20 min-w-28 rounded-lg px-3 py-3 text-left"
                           style={{
                             left: hoveredIssueInfo.x,
                             top: hoveredIssueInfo.y,

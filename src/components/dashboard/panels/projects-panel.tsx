@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -132,7 +132,15 @@ export function OrganizationModelsPanel({
       return null;
     }
 
-    return <span className="text-[10px]">{sortConfig.direction === "asc" ? "↑" : "↓"}</span>;
+    return (
+      <span className="inline-flex h-4 w-3 shrink-0 items-center justify-center leading-none">
+        {sortConfig.direction === "asc" ? (
+          <ArrowUp size={11} strokeWidth={2.4} className="block" />
+        ) : (
+          <ArrowDown size={11} strokeWidth={2.4} className="block" />
+        )}
+      </span>
+    );
   };
 
   const openEditOrganizationModel = (organization: OrganizationModel) => {
@@ -215,20 +223,20 @@ export function OrganizationModelsPanel({
               <thead className="project-list-head border-b border-slate-200/80 text-xs text-slate-500">
                 <tr>
                   <th className="h-8 py-0 font-medium align-middle">
-                    <button type="button" onClick={() => handleSort("name")} className="flex h-8 w-full items-center gap-1 px-4 text-left cursor-pointer select-none">
+                    <button type="button" onClick={() => handleSort("name")} className="flex h-8 w-full items-center gap-0.5 px-4 text-left cursor-pointer select-none">
                       프로젝트 이름
                       {getSortIndicator("name")}
                     </button>
                   </th>
                   <th className="h-8 px-4 py-0 font-medium align-middle">설명</th>
                   <th className="h-8 py-0 font-medium align-middle">
-                    <button type="button" onClick={() => handleSort("targetSites")} className="flex h-8 w-full items-center gap-1 px-4 text-left cursor-pointer select-none">
+                    <button type="button" onClick={() => handleSort("targetSites")} className="flex h-8 w-full items-center gap-0.5 px-4 text-left cursor-pointer select-none">
                       대상 페이지
                       {getSortIndicator("targetSites")}
                     </button>
                   </th>
                   <th className="h-8 py-0 font-medium align-middle">
-                    <button type="button" onClick={() => handleSort("updatedAt")} className="flex h-8 w-full items-center gap-1 px-4 text-left cursor-pointer select-none">
+                    <button type="button" onClick={() => handleSort("updatedAt")} className="flex h-8 w-full items-center gap-0.5 px-4 text-left cursor-pointer select-none">
                       최근 수정
                       {getSortIndicator("updatedAt")}
                     </button>
@@ -283,12 +291,9 @@ export function OrganizationModelsPanel({
                               <Pencil size={14} />
                             </button>
                             <span
-                              className={`pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium opacity-0 transition group-hover/action:opacity-100 ${
+                              data-tooltip-tone={isDarkMode ? "dark" : "light"}
+                              className={`project-table-tooltip invisible pointer-events-none absolute left-1/2 z-[9999] -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium group-hover/action:visible ${
                                 index === 0 ? "top-full mt-2" : "bottom-full mb-2"
-                              } ${
-                                isDarkMode
-                                  ? "bg-[#11141a] text-white"
-                                  : "border border-slate-200 bg-white text-slate-900"
                               }`}
                             >
                               수정
@@ -311,12 +316,9 @@ export function OrganizationModelsPanel({
                               <Trash2 size={14} className={isDarkMode ? "text-rose-400" : "text-red-600"} />
                             </button>
                             <span
-                              className={`pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium opacity-0 transition group-hover/action:opacity-100 ${
+                              data-tooltip-tone={isDarkMode ? "dark" : "light"}
+                              className={`project-table-tooltip invisible pointer-events-none absolute left-1/2 z-[9999] -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium group-hover/action:visible ${
                                 index === 0 ? "top-full mt-2" : "bottom-full mb-2"
-                              } ${
-                                isDarkMode
-                                  ? "bg-[#11141a] text-white"
-                                  : "border border-slate-200 bg-white text-slate-900"
                               }`}
                             >
                               제거

@@ -229,6 +229,7 @@
     background-color: var(--dashboard-card-bg) !important;
     border-color: var(--dashboard-card-border) !important;
     border-width: 0 !important;
+    border-radius: 28px !important;
   }
 
   .bridge-dashboard.theme-light .dashboard-card {
@@ -246,6 +247,33 @@
     border-color: var(--dashboard-card-border) !important;
     border-width: 0 !important;
     box-shadow: none !important;
+  }
+
+  .bridge-dashboard.theme-dark .dashboard-content-zone .site-recent-issues-card {
+    background: var(--dashboard-content-card-bg) !important;
+  }
+
+  .bridge-dashboard.theme-dark .dashboard-content-zone .site-recent-issue-detail-box {
+    background: var(--dashboard-content-card-bg) !important;
+  }
+
+  .bridge-dashboard.theme-dark .dashboard-content-zone .site-recent-issue-kwcag-tag {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+
+  .bridge-dashboard.theme-dark .dashboard-content-zone .site-recent-issue-nav-button {
+    color: #64748b !important;
+  }
+
+  .bridge-dashboard.theme-dark .dashboard-content-zone .site-recent-issue-nav-button:hover:not(:disabled),
+  .bridge-dashboard.theme-dark .dashboard-content-zone .site-recent-issue-nav-button:focus-visible:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+  }
+
+  .bridge-dashboard.theme-dark .dashboard-content-zone .site-recent-issue-nav-button:focus-visible:not(:disabled) {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15) !important;
   }
 
   .bridge-dashboard.theme-light .dashboard-card .rounded-b-xl {
@@ -299,7 +327,12 @@
     border-color: var(--dashboard-nested-border) !important;
   }
 
+  .bridge-dashboard.theme-dark .text-slate-950,
   .bridge-dashboard.theme-dark .text-slate-900 {
+    color: var(--dashboard-text-strong) !important;
+  }
+
+  .bridge-dashboard.theme-dark .text-black {
     color: var(--dashboard-text-strong) !important;
   }
 
@@ -905,6 +938,29 @@
   .bridge-dashboard.theme-dark .project-list-table span,
   .bridge-dashboard.theme-dark .project-list-table button {
     color: var(--dashboard-text-primary) !important;
+  }
+
+  .bridge-dashboard span.project-table-tooltip,
+  span.project-table-tooltip[data-tooltip-tone="light"],
+  .bridge-dashboard.theme-light .project-list-table span.project-table-tooltip,
+  .bridge-dashboard.theme-light span.project-table-tooltip {
+    background-color: #020617 !important;
+    border: 1px solid transparent !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+  }
+
+  span.project-table-tooltip[data-tooltip-tone="dark"],
+  .bridge-dashboard.theme-dark .project-list-table span.project-table-tooltip,
+  .bridge-dashboard.theme-dark span.project-table-tooltip {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    border-color: rgba(226, 232, 240, 0.9) !important;
+    color: #020617 !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
   }
 
   .bridge-dashboard.theme-dark .project-list-table .site-status-badge {

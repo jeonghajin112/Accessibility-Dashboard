@@ -156,7 +156,7 @@ export function CurrentOpenIssuesCard({
           {activeSeveritySegment && hoveredSeveritySegment && typeof document !== "undefined" && createPortal(
             <div
               role="tooltip"
-              className="pointer-events-none fixed z-[9999] min-w-32 rounded-lg px-3 py-2 text-left shadow-[0_14px_32px_rgba(2,6,23,0.32)]"
+              className="pointer-events-none fixed z-[9999] min-w-32 rounded-lg px-3 py-2 text-left"
               style={{
                 left: hoveredSeveritySegment.x,
                 top: hoveredSeveritySegment.y,

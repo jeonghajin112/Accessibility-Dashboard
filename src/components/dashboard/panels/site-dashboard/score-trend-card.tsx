@@ -1,24 +1,84 @@
 import { ChartContainer, ChartTooltip } from "@/components/ui/line-charts-6";
-import { Bar, ComposedChart, Line, ReferenceLine, XAxis, YAxis } from "recharts";
+import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 
 import { chartConfig, chartLineVisibility, scoreGridLines } from "./constants";
-import type { ChartSeriesKey, ScoreChartItem } from "./types";
+import { SummaryStatCards } from "./summary-stat-cards";
+import type { ChartSeriesKey, ScoreChartItem, SiteSummaryItem } from "./types";
 import { formatDateLabel, getChartLabel, getChartValueSuffix } from "./utils";
 
 type ScoreTrendCardProps = {
   chartData: ScoreChartItem[];
+  summaryItems: SiteSummaryItem[];
 };
 
-export function ScoreTrendCard({ chartData }: ScoreTrendCardProps) {
+type IssueBarShapeProps = {
+  fill?: string;
+  height?: number | string;
+  width?: number | string;
+  x?: number | string;
+  y?: number | string;
+};
+
+function toChartNumber(value: number | string | undefined): number {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+}
+
+function IssueBarShape({ fill, height, width, x, y }: IssueBarShapeProps) {
+  const xValue = toChartNumber(x);
+  const yValue = toChartNumber(y);
+  const widthValue = toChartNumber(width);
+  const heightValue = toChartNumber(height);
+
+  if (widthValue <= 0 || heightValue <= 0) {
+    return null;
+  }
+
+  const radius = Math.min(3, widthValue / 2, heightValue);
+  const right = xValue + widthValue;
+  const bottom = yValue + heightValue;
+  const barPath = [
+    `M ${xValue} ${bottom}`,
+    `V ${yValue + radius}`,
+    `Q ${xValue} ${yValue} ${xValue + radius} ${yValue}`,
+    `H ${right - radius}`,
+    `Q ${right} ${yValue} ${right} ${yValue + radius}`,
+    `V ${bottom}`,
+    "Z"
+  ].join(" ");
+
   return (
-    <article className="dashboard-card flex min-h-0 w-full flex-col rounded-xl border border-slate-200 bg-white p-1">
+    <g>
+      <rect
+        x={xValue - 1}
+        y={yValue - 1}
+        width={widthValue + 2}
+        height={heightValue + 2}
+        fill="var(--dashboard-card-bg)"
+      />
+      <path d={barPath} fill={fill ?? chartConfig.issueCount.color} />
+    </g>
+  );
+}
+
+export function ScoreTrendCard({ chartData, summaryItems }: ScoreTrendCardProps) {
+  return (
+    <article className="dashboard-card flex h-full min-h-0 w-full flex-col rounded-xl border border-slate-200 bg-white p-1">
       <div className="relative flex items-center justify-between px-3 pt-3">
         <h2 className="text-sm font-semibold text-slate-900">접근성 점수 추이</h2>
       </div>
-      <div className="mt-2 px-2.5 py-5">
+      <div className="mt-2 px-2.5 py-4">
         <ChartContainer
           config={chartConfig}
-          className="h-64 w-full overflow-visible [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial"
+          className="h-[360px] w-full overflow-visible [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial"
         >
           <ComposedChart
             data={chartData}
@@ -36,7 +96,7 @@ export function ScoreTrendCard({ chartData }: ScoreTrendCardProps) {
               tickLine={false}
               tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
               tickMargin={10}
-              padding={{ left: 18, right: 18 }}
+              padding={{ left: 2, right: 2 }}
             />
 
             <YAxis
@@ -61,16 +121,14 @@ export function ScoreTrendCard({ chartData }: ScoreTrendCardProps) {
               tickFormatter={() => ""}
             />
 
-            {scoreGridLines.map((value) => (
-              <ReferenceLine
-                key={value}
-                yAxisId="score"
-                y={value}
-                stroke="#d8dee8"
-                strokeWidth={1}
-                strokeOpacity={0.9}
-              />
-            ))}
+            <CartesianGrid
+              yAxisId="score"
+              vertical={false}
+              horizontalValues={scoreGridLines}
+              stroke="var(--site-score-grid-color)"
+              strokeWidth={1}
+              strokeOpacity={0.9}
+            />
 
             <Bar
               yAxisId="issues"
@@ -79,6 +137,7 @@ export function ScoreTrendCard({ chartData }: ScoreTrendCardProps) {
               fillOpacity={1}
               barSize={14}
               radius={[3, 3, 0, 0]}
+              shape={<IssueBarShape />}
               isAnimationActive={false}
             />
 
@@ -103,6 +162,9 @@ export function ScoreTrendCard({ chartData }: ScoreTrendCardProps) {
             />
           </ComposedChart>
         </ChartContainer>
+      </div>
+      <div className="px-3 pb-3">
+        <SummaryStatCards items={summaryItems} />
       </div>
     </article>
   );

@@ -11,6 +11,40 @@ import type { DashboardRouteState } from "./types";
 import { useDashboardTheme } from "./use-dashboard-theme";
 import { formatDateTime } from "./utils";
 
+const RESCAN_RESULT_POLL_ATTEMPTS = 12;
+const RESCAN_RESULT_POLL_INTERVAL_MS = 2000;
+
+function wait(milliseconds: number) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, milliseconds);
+  });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
+
+function getPayloadRequestId(payload: unknown): number | null {
+  const requestPayload = isRecord(payload) && isRecord(payload.evaluation_request)
+    ? payload.evaluation_request
+    : isRecord(payload) && isRecord(payload.data)
+      ? payload.data
+      : null;
+  const requestId = requestPayload?.id;
+
+  return typeof requestId === "number" ? requestId : null;
+}
+
+function getLatestRequestForTarget(data: DashboardViewModel | null, targetId: number) {
+  return [...(data?.evaluationRequests ?? [])]
+    .filter((request) => request.evaluationTargetId === targetId)
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))[0] ?? null;
+}
+
+function isFinalRequestStatus(status: string) {
+  return status === "COMPLETED" || status === "FAILED";
+}
+
 function parseDashboardRoute(pathname: string): DashboardRouteState {
   const segments = pathname.split("/").filter(Boolean);
 
@@ -74,7 +108,7 @@ export function useDashboardController({
       signal?: AbortSignal;
     } = {}) => {
       if (isRefreshingRef.current && !showLoading) {
-        return;
+        return null;
       }
       isRefreshingRef.current = true;
       let didAbort = false;
@@ -84,17 +118,20 @@ export function useDashboardController({
       }
 
       try {
-        setDashboardData(await fetchDashboardViewModel(signal));
+        const nextData = await fetchDashboardViewModel(signal);
+        setDashboardData(nextData);
         setDashboardError("");
+        return nextData;
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
           didAbort = true;
-          return;
+          return null;
         }
         setDashboardError(error instanceof Error ? error.message : "대시보드 데이터를 가져오지 못했습니다.");
         if (clearOnError) {
           setDashboardData(null);
         }
+        return null;
       } finally {
         isRefreshingRef.current = false;
 
@@ -378,10 +415,12 @@ export function useDashboardController({
       return;
     }
 
+    const targetId = selectedEvaluationTargetModel.id;
+    const previousLatestRequest = getLatestRequestForTarget(dashboardData, targetId);
     setIsRescanningSite(true);
     try {
       const response = await fetch(
-        buildApiUrl(`/evaluation-targets/${selectedEvaluationTargetModel.id}/evaluation-requests`),
+        buildApiUrl(`/evaluation-targets/${targetId}/evaluation-requests`),
         {
           method: "POST",
           headers: {
@@ -401,13 +440,38 @@ export function useDashboardController({
         throw new Error(message);
       }
 
-      await loadDashboard({ clearOnError: false });
+      const createdRequestId = getPayloadRequestId(payload);
+      for (let attempt = 0; attempt < RESCAN_RESULT_POLL_ATTEMPTS; attempt += 1) {
+        if (attempt > 0) {
+          await wait(RESCAN_RESULT_POLL_INTERVAL_MS);
+        }
+
+        const refreshedData = await loadDashboard({ clearOnError: false });
+        const latestRequest =
+          createdRequestId === null
+            ? getLatestRequestForTarget(refreshedData ?? null, targetId)
+            : refreshedData?.evaluationRequests.find((request) => request.id === createdRequestId) ?? null;
+
+        if (!latestRequest) {
+          continue;
+        }
+
+        const isCreatedOrUpdatedRequest =
+          createdRequestId !== null ||
+          previousLatestRequest === null ||
+          latestRequest.id !== previousLatestRequest.id ||
+          Date.parse(latestRequest.updatedAt) > Date.parse(previousLatestRequest.updatedAt);
+
+        if (isCreatedOrUpdatedRequest && isFinalRequestStatus(latestRequest.status)) {
+          break;
+        }
+      }
     } catch (error) {
       setDashboardError(error instanceof Error ? error.message : "다시 스캔 요청 중 오류가 발생했습니다.");
     } finally {
       setIsRescanningSite(false);
     }
-  }, [isRescanningSite, loadDashboard, selectedEvaluationTargetModel, selectedOrganizationModel]);
+  }, [dashboardData, isRescanningSite, loadDashboard, selectedEvaluationTargetModel, selectedOrganizationModel]);
 
   const sidebarLinks: SidebarItem[] = useMemo(
     () => [

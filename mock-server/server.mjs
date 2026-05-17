@@ -137,12 +137,18 @@ const issueTemplates = [
 ];
 
 const monthWindows = [
-  "2025-12-20T10:43:00+09:00",
-  "2026-01-17T13:27:00+09:00",
-  "2026-02-15T09:29:00+09:00",
-  "2026-03-16T10:24:00+09:00",
-  "2026-04-18T11:31:00+09:00",
-  "2026-05-12T12:42:00+09:00"
+  { timestamp: "2025-06-18T10:20:00+09:00", scoreIndex: -6 },
+  { timestamp: "2025-07-16T10:35:00+09:00", scoreIndex: -5 },
+  { timestamp: "2025-08-19T11:05:00+09:00", scoreIndex: -4 },
+  { timestamp: "2025-09-17T09:55:00+09:00", scoreIndex: -3 },
+  { timestamp: "2025-10-15T14:10:00+09:00", scoreIndex: -2 },
+  { timestamp: "2025-11-19T13:40:00+09:00", scoreIndex: -1 },
+  { timestamp: "2025-12-20T10:43:00+09:00", scoreIndex: 0 },
+  { timestamp: "2026-01-17T13:27:00+09:00", scoreIndex: 1 },
+  { timestamp: "2026-02-15T09:29:00+09:00", scoreIndex: 2 },
+  { timestamp: "2026-03-16T10:24:00+09:00", scoreIndex: 3 },
+  { timestamp: "2026-04-18T11:31:00+09:00", scoreIndex: 4 },
+  { timestamp: "2026-05-12T12:42:00+09:00", scoreIndex: 5 }
 ];
 
 let nextOrganizationId = 200;
@@ -158,8 +164,10 @@ function clamp(value, min, max) {
 }
 
 function createEvaluationRequestSnapshot(evaluationTarget, windowIndex) {
-  const timestamp = monthWindows[windowIndex % monthWindows.length];
-  const baseScore = 82 - ((evaluationTarget.id + windowIndex) % 8) + windowIndex * 2;
+  const monthWindow = monthWindows[windowIndex % monthWindows.length];
+  const timestamp = monthWindow.timestamp;
+  const scoreIndex = monthWindow.scoreIndex;
+  const baseScore = 82 - ((evaluationTarget.id + scoreIndex) % 8) + scoreIndex * 2;
   const totalScore = clamp(baseScore, 58, 96);
 
   const evaluationRequest = {
@@ -202,7 +210,7 @@ function createEvaluationRequestSnapshot(evaluationTarget, windowIndex) {
     return;
   }
 
-  const issueCount = Math.max(2, Math.min(issueTemplates.length, Math.round((100 - totalScore) / 8)));
+  const issueCount = Math.max(8, Math.min(issueTemplates.length * 2, Math.round((100 - totalScore) / 4)));
   for (let index = 0; index < issueCount; index += 1) {
     const template = issueTemplates[(evaluationTarget.id + index) % issueTemplates.length];
     const issueResult = {

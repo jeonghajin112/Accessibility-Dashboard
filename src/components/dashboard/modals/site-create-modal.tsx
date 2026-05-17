@@ -9,7 +9,6 @@ import { useDialogAccessibility } from "../shared/use-dialog-accessibility";
 
 export function SiteCreateModal({
   isOpen,
-  isDarkMode,
   project,
   onAddEvaluationTargetModel,
   onClose
@@ -150,11 +149,7 @@ export function SiteCreateModal({
             onClick={() => {
               void handleAddSite();
             }}
-            className={`site-modal-footer-submit inline-flex h-10 items-center rounded-xl px-4 text-sm disabled:cursor-not-allowed disabled:opacity-60 ${
-              isDarkMode
-                ? "border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
-                : "bg-slate-900 font-semibold text-white hover:bg-slate-800"
-            }`}
+            className="site-modal-footer-submit inline-flex h-10 items-center rounded-xl border border-transparent bg-[#ef6a50] px-4 text-sm font-semibold text-white hover:bg-[#e85d43] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmittingSite ? "분석 시작 중..." : "분석 시작"}
           </button>

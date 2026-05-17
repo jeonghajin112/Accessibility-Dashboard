@@ -5,7 +5,7 @@ import type { ChartSeriesKey, SeverityChartItem, WcagCriterion } from "./types";
 export const chartConfig = {
   score: {
     label: "평균 점수",
-    color: "#111111"
+    color: "var(--site-score-line-color)"
   },
   issueCount: {
     label: "문제 수",

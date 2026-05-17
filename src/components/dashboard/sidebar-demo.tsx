@@ -44,7 +44,7 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
 
   return (
     <main
-      className={`bridge-dashboard ${hasCompactTopZone ? "dashboard-compact-top" : ""} min-h-screen w-screen p-0 ${
+      className={`bridge-dashboard ${hasCompactTopZone ? "dashboard-compact-top" : ""} min-h-screen w-full overflow-x-hidden p-0 ${
         dashboard.isDarkMode ? "" : "bg-white"
       } ${dashboard.isDarkMode ? "theme-dark" : "theme-light"}`}
     >
@@ -88,43 +88,51 @@ export function SidebarDemo({ onLogout, userName, onBootstrapComplete }: Sidebar
             </div>
 
             {shouldShowHeaderTitle && (
-              <div className="pointer-events-auto absolute left-6 right-0 top-[calc(var(--dashboard-control-size)+4.25rem)] flex min-w-0 items-start justify-between gap-6">
+              <div className="pointer-events-auto absolute left-0 right-0 top-[calc(var(--dashboard-control-size)+4.25rem)] flex min-w-0 items-start justify-between gap-6">
                 <div className="min-w-0">
-                  <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{dashboard.headerTitle}</h1>
-                  {dashboard.headerDescription.length > 0 && (
-                  dashboard.headerDescriptionHref ? (
-                    <a
-                      href={dashboard.headerDescriptionHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-2 inline-flex max-w-full truncate text-sm text-slate-500 underline underline-offset-4 transition-colors hover:text-slate-700"
-                      title={dashboard.headerDescription}
-                    >
-                      {dashboard.headerDescription}
-                    </a>
-                  ) : (
-                    <p className="mt-2 text-sm text-slate-500">{dashboard.headerDescription}</p>
-                  )
-                  )}
+                  <div className="flex min-w-0 flex-wrap items-end gap-x-5 gap-y-2">
+                    <h1 className="dashboard-home-title shrink-0 font-black tracking-tight text-slate-900">
+                      {dashboard.headerTitle}
+                    </h1>
+                    {dashboard.headerDescription.length > 0 && (
+                      dashboard.headerDescriptionHref ? (
+                        <a
+                          href={dashboard.headerDescriptionHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="-mb-1 inline-flex max-w-[42rem] truncate text-[0.95rem] font-medium text-[#8b95a1] underline underline-offset-4 transition-colors hover:text-slate-700"
+                          title={dashboard.headerDescription}
+                        >
+                          {dashboard.headerDescription}
+                        </a>
+                      ) : (
+                        <p className="-mb-1 max-w-[42rem] truncate text-[0.95rem] font-medium text-[#8b95a1]" title={dashboard.headerDescription}>
+                          {dashboard.headerDescription}
+                        </p>
+                      )
+                    )}
+                  </div>
                 </div>
 
                 {shouldShowSiteHeaderActions && (
-                  <div className="mt-1 flex shrink-0 items-center gap-3 pr-2">
-                    <div className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-600">
-                      <span className="text-slate-400">최근 스캔일</span>
-                      <span className="ml-2 text-slate-900">{dashboard.siteLatestScanLabel}</span>
+                  <div className="mt-3 flex shrink-0 items-center pr-2">
+                    <div className="flex min-w-[18rem] items-center justify-between gap-2 rounded-full bg-white py-1.5 pl-3 pr-1.5 text-xs font-semibold text-slate-600">
+                      <div className="min-w-0">
+                        <span className="text-slate-400">최근 스캔일</span>
+                        <span className="ml-2 text-slate-900">{dashboard.siteLatestScanLabel}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void dashboard.handleRescanEvaluationTargetModel();
+                        }}
+                        disabled={dashboard.isRescanningSite}
+                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#ef6a50] px-3 text-xs font-bold text-white transition hover:bg-[#e85d43] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <RefreshCw size={13} className={dashboard.isRescanningSite ? "animate-spin" : ""} />
+                        {dashboard.isRescanningSite ? "스캔 중" : "다시 스캔"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void dashboard.handleRescanEvaluationTargetModel();
-                      }}
-                      disabled={dashboard.isRescanningSite}
-                      className="inline-flex h-9 items-center gap-2 rounded-full bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
-                    >
-                      <RefreshCw size={14} className={dashboard.isRescanningSite ? "animate-spin" : ""} />
-                      {dashboard.isRescanningSite ? "스캔 중" : "다시 스캔"}
-                    </button>
                   </div>
                 )}
               </div>

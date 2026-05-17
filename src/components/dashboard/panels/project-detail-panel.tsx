@@ -1,5 +1,5 @@
 ﻿import { motion } from "framer-motion";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -17,7 +17,6 @@ import { categoryLabelMap, chartTokens } from "../shared/constants";
 import { PanelMessage, renderTargetTypeIcon } from "../shared/display";
 import { useDialogAccessibility } from "../shared/use-dialog-accessibility";
 import {
-  buildRecentMonthKeys,
   buildSmoothLinePath,
   buildTrendChartPoints,
   formatDateOnly,
@@ -41,6 +40,34 @@ function getIssueCategoryKey(issueCode: string): "perceivable" | "operable" | "u
     return "understandable";
   }
   return "robust";
+}
+
+function compareMonthKeys(left: string, right: string): number {
+  return left.localeCompare(right);
+}
+
+function addMonthsToMonthKey(monthKey: string, offset: number): string {
+  const [yearValue, monthValue] = monthKey.split("-");
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    return monthKey;
+  }
+
+  const date = new Date(year, month - 1 + offset, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function buildFixedMonthWindow(startMonth: string, months: number): string[] {
+  const result: string[] = [];
+  let current = startMonth;
+
+  for (let index = 0; index < months; index += 1) {
+    result.push(current);
+    current = addMonthsToMonthKey(current, 1);
+  }
+
+  return result;
 }
 
 export function OrganizationModelDetailPanel({
@@ -71,7 +98,7 @@ export function OrganizationModelDetailPanel({
   }) => Promise<void>;
   onDeleteEvaluationTargetModel: (input: { projectId: number; siteId: number }) => Promise<void>;
 }) {
-  const [activeTab, setActiveTab] = useState<ProjectDetailTab>("summary");
+  const [activeTab] = useState<ProjectDetailTab>("sites");
   const [siteSortConfig, setSiteSortConfig] = useState<{
     key: ProjectDetailSiteSortKey;
     direction: "asc" | "desc";
@@ -93,39 +120,8 @@ export function OrganizationModelDetailPanel({
     x: number;
     y: number;
   } | null>(null);
-  const [tabIndicatorStyle, setTabIndicatorStyle] = useState({ width: 0, left: 0 });
 
   const projectChartRef = useRef<HTMLDivElement | null>(null);
-  const tabContainerRef = useRef<HTMLDivElement | null>(null);
-  const tabButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-
-  const tabs = [
-    { id: "summary" as const, label: "요약" },
-    { id: "sites" as const, label: "페이지" },
-    { id: "reports" as const, label: "리포트" }
-  ];
-  const activeTabIndex = tabs.findIndex((tab) => tab.id === activeTab);
-
-  useEffect(() => {
-    const updateIndicator = () => {
-      const activeButton = tabButtonRefs.current[activeTabIndex];
-      const container = tabContainerRef.current;
-      if (!activeButton || !container) {
-        return;
-      }
-
-      const buttonRect = activeButton.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      setTabIndicatorStyle({
-        width: buttonRect.width,
-        left: buttonRect.left - containerRect.left
-      });
-    };
-
-    updateIndicator();
-    window.addEventListener("resize", updateIndicator);
-    return () => window.removeEventListener("resize", updateIndicator);
-  }, [activeTabIndex]);
 
   useEffect(() => {
     setHoveredMonthlyPoint(null);
@@ -244,37 +240,47 @@ export function OrganizationModelDetailPanel({
     latestScoreByMonth.set(monthKey, item.totalScore);
   }
 
-  const projectMonthlyLabels = buildRecentMonthKeys(12);
+  const currentMonthKey = toMonthKey(new Date().toISOString());
+  const projectScoreMonths = [...latestScoreByMonth.keys()].sort(compareMonthKeys);
+  const projectActivityMonths = [...latestScoreByMonth.keys(), ...issueCountsByMonth.keys()].sort(compareMonthKeys);
+  const firstScoreMonth = projectScoreMonths[0] ?? null;
+  const firstActivityMonth = projectActivityMonths[0] ?? currentMonthKey;
+  const lastActivityMonth = projectActivityMonths[projectActivityMonths.length - 1] ?? currentMonthKey;
+  const desiredStartMonth = firstScoreMonth ?? firstActivityMonth;
+  const latestWindowEndMonth = compareMonthKeys(lastActivityMonth, currentMonthKey) > 0 ? lastActivityMonth : currentMonthKey;
+  const latestAllowedStartMonth = addMonthsToMonthKey(latestWindowEndMonth, -11);
+  const projectStartMonth =
+    compareMonthKeys(desiredStartMonth, latestAllowedStartMonth) < 0 ? latestAllowedStartMonth : desiredStartMonth;
+  const projectMonthlyLabels = buildFixedMonthWindow(projectStartMonth, 12);
   const projectMonthlySeriesRaw = projectMonthlyLabels.map((monthKey) => {
     return latestScoreByMonth.get(monthKey) ?? null;
   });
-  let lastCarriedScore: number | null = null;
-  const projectMonthlySeries = projectMonthlySeriesRaw.map((value) => {
-    if (typeof value === "number") {
-      lastCarriedScore = value;
-      return value;
-    }
-    return lastCarriedScore;
-  });
-  const projectChartSeries = projectMonthlySeries.map((value) => value ?? (latestScore ?? averageScore ?? 0));
+  const projectMonthlySeries = projectMonthlySeriesRaw;
+  const projectChartSeries = projectMonthlySeries.map((value) => value ?? 0);
   const projectMonthlyIssueCounts = projectMonthlyLabels.map((monthKey) => issueCountsByMonth.get(monthKey) ?? 0);
   const maxMonthlyIssueCount = Math.max(1, ...projectMonthlyIssueCounts);
 
   const projectChartWidth = 620;
-  const projectChartHeight = 252;
-  const projectBarBaseY = 210;
-  const projectBarMaxHeight = 76;
-  const projectChartPaddingX = 36;
-  const projectBarWidth = 18;
+  const projectChartHeight = 260;
+  const projectChartPaddingLeft = 88;
+  const projectChartPaddingRight = 54;
+  const projectChartGridLeft = 70;
+  const projectChartGridRight = 28;
+  const projectChartPlotTop = 24;
+  const projectChartPlotBottom = 236;
+  const projectBarBaseY = projectChartPlotBottom;
+  const projectBarMaxHeight = 68;
+  const projectBarWidth = 14;
+  const projectScoreTicks = [100, 80, 60, 40, 20, 0];
   const projectChartSlotPoints = buildTrendChartPoints(projectChartSeries, projectMonthlyLabels, {
     width: projectChartWidth,
     height: projectChartHeight,
-    paddingLeft: projectChartPaddingX,
-    paddingRight: projectChartPaddingX,
+    paddingLeft: projectChartPaddingLeft,
+    paddingRight: projectChartPaddingRight,
     centerY: 72,
     amplitude: 18,
-    topY: 44,
-    bottomY: 132,
+    topY: projectChartPlotTop,
+    bottomY: projectChartPlotBottom,
     domainMin: 0,
     domainMax: 100
   });
@@ -310,8 +316,8 @@ export function OrganizationModelDetailPanel({
   const projectHoverZones = projectChartSlotPoints.map((point, index) => {
     const previousPoint = projectChartSlotPoints[index - 1];
     const nextPoint = projectChartSlotPoints[index + 1];
-    const left = previousPoint ? (previousPoint.x + point.x) / 2 : projectChartPaddingX / 2;
-    const right = nextPoint ? (point.x + nextPoint.x) / 2 : projectChartWidth - projectChartPaddingX / 2;
+    const left = previousPoint ? (previousPoint.x + point.x) / 2 : projectChartPaddingLeft - 22;
+    const right = nextPoint ? (point.x + nextPoint.x) / 2 : projectChartWidth - projectChartPaddingRight + 10;
     return {
       month: point.month,
       score: projectMonthlySeries[index] ?? null,
@@ -322,8 +328,10 @@ export function OrganizationModelDetailPanel({
   const projectChartStroke = isDarkMode ? "#ffffff" : "#0f172a";
   const projectChartPointColor = isDarkMode ? "#ffffff" : "#0f172a";
   const projectChartPointGlow = isDarkMode ? "rgba(255, 255, 255, 0.18)" : "rgba(15, 23, 42, 0.16)";
-  const projectChartLineGlow = isDarkMode ? "rgba(255, 255, 255, 0.16)" : "rgba(15, 23, 42, 0.14)";
+  const projectChartGridColor = isDarkMode ? "rgba(148, 163, 184, 0.16)" : "#d8dee8";
+  const projectChartTickColor = isDarkMode ? "#94a3b8" : "#64748b";
   const projectBarColor = "#ff8a00";
+  const projectBarMaskColor = isDarkMode ? "#11141a" : "#fbfaf7";
 
   const evaluationTargetById = new Map(organization.evaluationTargets.map((site) => [site.id, site]));
 
@@ -396,8 +404,17 @@ export function OrganizationModelDetailPanel({
     const isActive = siteSortConfig.key === key;
 
     return (
-      <span className={cn("inline-flex w-3 shrink-0 justify-center text-[10px]", isActive ? "opacity-100" : "opacity-0")}>
-        {siteSortConfig.direction === "asc" ? "↑" : "↓"}
+      <span
+        className={cn(
+          "inline-flex h-4 w-3 shrink-0 items-center justify-center leading-none",
+          isActive ? "opacity-100" : "opacity-0"
+        )}
+      >
+        {siteSortConfig.direction === "asc" ? (
+          <ArrowUp size={11} strokeWidth={2.4} className="block" />
+        ) : (
+          <ArrowDown size={11} strokeWidth={2.4} className="block" />
+        )}
       </span>
     );
   };
@@ -408,11 +425,15 @@ export function OrganizationModelDetailPanel({
     return (
       <span
         className={cn(
-          "pointer-events-none absolute left-full top-1/2 ml-1 -translate-y-1/2 text-[10px]",
+          "pointer-events-none absolute left-full top-1/2 ml-0.5 inline-flex h-4 w-3 -translate-y-1/2 items-center justify-center leading-none",
           isActive ? "opacity-100" : "opacity-0"
         )}
       >
-        {siteSortConfig.direction === "asc" ? "↑" : "↓"}
+        {siteSortConfig.direction === "asc" ? (
+          <ArrowUp size={11} strokeWidth={2.4} className="block" />
+        ) : (
+          <ArrowDown size={11} strokeWidth={2.4} className="block" />
+        )}
       </span>
     );
   };
@@ -533,15 +554,8 @@ export function OrganizationModelDetailPanel({
   const failedStatusLabel = mapScanStatus("failed");
   const runningStatusLabel = mapScanStatus("queued");
 
-  const alignedComboMonthlyTrendCard = (
-    <article className="dashboard-card flex h-[480px] min-h-[460px] flex-col rounded-xl border border-slate-200 bg-white px-2 pt-5 pb-0 sm:px-3">
-      <div className="flex min-h-[40px] items-start justify-between gap-3">
-        <div className="min-w-0 pl-1 pt-2 sm:pl-2">
-          <p className="text-sm font-semibold text-slate-900">월별 접근성 점수 추이</p>
-        </div>
-      </div>
-
-      <div ref={projectChartRef} className="relative mt-4 -mx-2 min-h-[260px] flex-1 sm:mx-0">
+  const projectTrendChart = (
+      <div ref={projectChartRef} className="relative h-[365px] w-full">
         <div className="absolute inset-0 overflow-hidden rounded-b-xl">
           <svg viewBox={`0 0 ${projectChartWidth} ${projectChartHeight}`} preserveAspectRatio="none" className="h-full w-full">
             <defs>
@@ -552,23 +566,39 @@ export function OrganizationModelDetailPanel({
               </linearGradient>
             </defs>
 
-            {[52, 92, 132, 172].map((y) => (
-              <line
-                key={`aligned-guide-${y}`}
-                x1={projectChartPaddingX}
-                x2={projectChartWidth - projectChartPaddingX}
-                y1={y}
-                y2={y}
-                stroke={isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(148,163,184,0.14)"}
-                strokeWidth="1"
-              />
-            ))}
+            {projectScoreTicks.map((tick) => {
+              const y = projectChartPlotBottom - (tick / 100) * (projectChartPlotBottom - projectChartPlotTop);
+
+              return (
+                <g key={`project-score-tick-${tick}`}>
+                  <line
+                    x1={projectChartGridLeft}
+                    x2={projectChartWidth - projectChartGridRight}
+                    y1={y}
+                    y2={y}
+                    stroke={projectChartGridColor}
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={projectChartGridLeft - 12}
+                    y={y + 4}
+                    textAnchor="end"
+                    fontFamily="Pretendard, Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif"
+                    fontSize="9"
+                    fontWeight="500"
+                    fill={projectChartTickColor}
+                  >
+                    {tick}점
+                  </text>
+                </g>
+              );
+            })}
 
             {activeMonthlySlot && (
               <line
                 x1={activeMonthlySlot.x}
                 x2={activeMonthlySlot.x}
-                y1="44"
+                y1={projectChartPlotTop}
                 y2={projectBarBaseY}
                 stroke={isDarkMode ? "rgba(255,255,255,0.34)" : "rgba(15,23,42,0.45)"}
                 strokeWidth="1"
@@ -579,29 +609,27 @@ export function OrganizationModelDetailPanel({
             {projectBarRows.map((bar) => (
               <g key={`${bar.month}-aligned-issues`}>
                 {bar.count > 0 && (
-                  <rect
-                    x={bar.x}
-                    y={bar.y}
-                    width={bar.width}
-                    height={bar.height}
-                    rx="5"
-                    fill={hoveredMonthlyPoint?.month === bar.month ? "#ff9f2f" : projectBarColor}
-                  />
+                  <>
+                    <rect
+                      x={bar.x - 1}
+                      y={bar.y - 1}
+                      width={bar.width + 2}
+                      height={bar.height + 2}
+                      fill={projectBarMaskColor}
+                    />
+                    <rect
+                      x={bar.x}
+                      y={bar.y}
+                      width={bar.width}
+                      height={bar.height}
+                      rx="4"
+                      fill={hoveredMonthlyPoint?.month === bar.month ? "#ff9f2f" : projectBarColor}
+                    />
+                  </>
                 )}
               </g>
             ))}
 
-            <motion.path
-              key="project-monthly-combo-line-glow-v2"
-              initial={{ d: projectChartStartLinePath }}
-              animate={{ d: projectChartLinePath }}
-              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-              fill="none"
-              stroke={projectChartLineGlow}
-              strokeWidth="5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
             <motion.path
               key="project-monthly-combo-line-v2"
               initial={{ d: projectChartStartLinePath }}
@@ -616,14 +644,14 @@ export function OrganizationModelDetailPanel({
 
             {projectHoverZones.map((zone) => (
               <rect
-                key={`${zone.month}-aligned-zone`}
-                x={zone.x}
-                y="36"
-                width={zone.width}
-                height={projectBarBaseY - 24}
-                fill="transparent"
-                className="cursor-pointer"
-                onMouseMove={(event) => {
+              key={`${zone.month}-aligned-zone`}
+              x={zone.x}
+              y={projectChartPlotTop - 12}
+              width={zone.width}
+              height={projectBarBaseY - projectChartPlotTop + 24}
+              fill="transparent"
+              className="cursor-pointer"
+              onMouseMove={(event) => {
                   const rect = projectChartRef.current?.getBoundingClientRect();
                   if (!rect) {
                     return;
@@ -637,6 +665,20 @@ export function OrganizationModelDetailPanel({
                 }}
                 onMouseLeave={() => setHoveredMonthlyPoint(null)}
               />
+            ))}
+            {projectChartSlotPoints.map((point) => (
+              <text
+                key={`${point.month}-label`}
+                x={point.x}
+                y={projectChartHeight - 10}
+                textAnchor="middle"
+                fontFamily="Pretendard, Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif"
+                fontSize="8.75"
+                fontWeight="500"
+                fill={projectChartTickColor}
+              >
+                {formatMonthShortLabel(point.month)}
+              </text>
             ))}
           </svg>
 
@@ -678,7 +720,7 @@ export function OrganizationModelDetailPanel({
 
         {hoveredMonthlyPoint && (
           <div
-            className="pointer-events-none absolute z-20 min-w-24 rounded-lg px-3 py-2 text-left shadow-[0_14px_32px_rgba(2,6,23,0.32)]"
+            className="pointer-events-none absolute z-20 min-w-24 rounded-lg px-3 py-2 text-left"
             style={{
               left: hoveredMonthlyPoint.x,
               top: hoveredMonthlyPoint.y,
@@ -697,60 +739,39 @@ export function OrganizationModelDetailPanel({
             </p>
           </div>
         )}
-
-        {projectChartSlotPoints.map((point) => (
-          <span
-            key={`${point.month}-label`}
-            className="pointer-events-none absolute bottom-6 -translate-x-1/2 text-[10px] font-semibold uppercase tracking-[0.04em] text-slate-400"
-            style={{ left: `${(point.x / projectChartWidth) * 100}%` }}
-          >
-            {formatMonthShortLabel(point.month)}
-          </span>
-        ))}
       </div>
-    </article>
   );
   const summaryRightPlaceholderCard = (
-    <article className="dashboard-card min-h-[250px] w-[calc(100%+6rem)] max-w-none rounded-xl border border-slate-200 bg-[#f1f1f3] px-6 py-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-slate-900">프로젝트 상황</p>
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <div className="min-h-[150px] rounded-2xl bg-white px-5 py-5">
+    <section className="min-h-[214px] w-full px-2 py-3">
+      <div className="grid grid-cols-3 gap-3">
+        <div className="min-h-[132px] rounded-2xl bg-white px-3 py-4">
           <p className="text-xs font-semibold text-[#8b95a1]">종합 점수</p>
           <div className="mt-5 flex items-end gap-1">
-            <span className="text-[3.1rem] font-bold leading-none tracking-tight text-slate-950">
+            <span className="text-[2.15rem] font-bold leading-none tracking-tight text-slate-950">
               {summaryTotalScore ?? "-"}
             </span>
-            <span className="mb-1.5 text-xl font-bold text-slate-500">점</span>
+            <span className="mb-1 text-base font-bold text-slate-500">점</span>
           </div>
         </div>
 
-        <div className="min-h-[150px] rounded-2xl bg-white px-5 py-5">
+        <div className="min-h-[132px] rounded-2xl bg-white px-3 py-4">
           <p className="text-xs font-semibold text-[#8b95a1]">발견 문제수</p>
           <div className="mt-5 flex items-end gap-1">
-            <span className="text-[3.1rem] font-bold leading-none tracking-tight text-slate-950">{projectIssueCount}</span>
-            <span className="mb-1.5 text-xl font-bold text-slate-500">건</span>
+            <span className="text-[2.15rem] font-bold leading-none tracking-tight text-slate-950">{projectIssueCount}</span>
+            <span className="mb-1 text-base font-bold text-slate-500">건</span>
           </div>
         </div>
 
-        <div className="min-h-[150px] rounded-2xl bg-white px-5 py-5">
+        <div className="min-h-[132px] rounded-2xl bg-white px-3 py-4">
           <p className="text-xs font-semibold text-[#8b95a1]">최근 수정일</p>
-          <p className="mt-7 text-[1.75rem] font-bold leading-none tracking-tight text-slate-950">{summaryUpdatedDate}</p>
+          <p className="mt-8 text-[0.95rem] font-bold leading-tight tracking-tight text-slate-950">{summaryUpdatedDate}</p>
         </div>
       </div>
-    </article>
+    </section>
   );
   const summaryBreakdownCard = (
-    <article className="dashboard-card mt-3 min-h-[217px] w-[calc(100%+6rem)] max-w-none rounded-xl border border-slate-200 bg-[#f1f1f3] px-6 py-6">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-900">분석 방식별 점수</p>
-        <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-slate-400">최신 평가 기준</span>
-      </div>
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
+    <section className="min-h-[214px] w-full px-2 py-3">
+      <div className="grid gap-3">
         {summaryAnalysisScoreRows.map((row) => (
           <div key={row.key} className="grid grid-cols-[76px_minmax(0,1fr)_42px] items-center gap-3 rounded-2xl bg-white px-4 py-4">
             <p className="truncate text-[11px] font-semibold text-slate-700">{row.label}</p>
@@ -768,6 +789,17 @@ export function OrganizationModelDetailPanel({
             </p>
           </div>
         ))}
+      </div>
+    </section>
+  );
+  const alignedComboMonthlyTrendCard = (
+    <article className="dashboard-card min-h-[480px] rounded-xl border border-slate-200 bg-white px-3 py-3 sm:px-4">
+      <div className="grid min-h-[452px] gap-3 lg:grid-cols-[minmax(0,0.82fr)_minmax(440px,540px)]">
+        <div className="flex h-full min-h-[452px] items-center px-10 py-9">{projectTrendChart}</div>
+        <div className="hidden min-h-0 flex-col gap-3 lg:flex">
+          {summaryRightPlaceholderCard}
+          {summaryBreakdownCard}
+        </div>
       </div>
     </article>
   );
@@ -804,79 +836,30 @@ export function OrganizationModelDetailPanel({
   );
   return (
     <div className="space-y-3 overflow-visible">
-      <div
-        ref={tabContainerRef}
-        className={cn(
-          "absolute right-[var(--dashboard-side-gutter)] top-[calc(var(--dashboard-fixed-top)+var(--dashboard-control-size)+5.75rem)] z-50 flex w-[min(18rem,calc(100vw-2rem))] items-center rounded-full px-1 py-1 backdrop-blur-xl",
-          isDarkMode ? "bg-[#1f1f1f]" : "bg-[#e8e8ec]"
-        )}
-      >
-        {tabs.map((tab, index) => {
-          const isActive = tab.id === activeTab;
-
-          return (
-            <button
-              key={tab.id}
-              ref={(element) => {
-                tabButtonRefs.current[index] = element;
-              }}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "relative z-10 inline-flex h-10 flex-1 items-center justify-center rounded-full px-3 py-1 text-sm font-semibold transition-colors",
-                isActive
-                  ? isDarkMode
-                    ? "text-white"
-                    : "text-white"
-                  : isDarkMode
-                    ? "text-slate-400 hover:text-white"
-                    : "text-black hover:text-black"
-              )}
-            >
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-
-        <motion.div
-          animate={tabIndicatorStyle}
-          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          className={cn(
-            "absolute top-1 bottom-1 rounded-full",
-            isDarkMode ? "bg-white/12" : "bg-black"
-          )}
-        />
+      <div className="absolute right-[var(--dashboard-side-gutter)] top-[calc(var(--dashboard-fixed-top)+var(--dashboard-control-size)+5.75rem)] z-50">
+        <button
+          type="button"
+          onClick={onOpenCreateSiteModal}
+          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl border border-transparent bg-[#ef6a50] px-5 text-sm font-bold text-white transition hover:bg-[#e85d43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef6a50]/30"
+        >
+          <Plus size={18} strokeWidth={2.4} className="-ml-2" />
+          페이지 추가
+        </button>
       </div>
 
       {activeTab === "summary" && (
         <div className="mx-auto min-h-[400px] w-full max-w-none">
-          <div className="mt-3 min-h-0 lg:grid lg:grid-cols-[minmax(0,0.92fr)_720px] lg:gap-3">
-            <div className="min-h-0">{alignedComboMonthlyTrendCard}</div>
-            <div className="hidden min-h-0 overflow-visible lg:block">
-              {summaryRightPlaceholderCard}
-              {summaryBreakdownCard}
-            </div>
-          </div>
+          <div className="mt-3 min-h-0">{alignedComboMonthlyTrendCard}</div>
         </div>
       )}
 
       {activeTab === "sites" && (
         <div className="-mt-2 space-y-0">
-          <div className="pointer-events-none relative z-10 -mb-4 flex items-center justify-end">
-            <button
-              type="button"
-              onClick={onOpenCreateSiteModal}
-              className="project-create-trigger site-create-trigger pointer-events-auto inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-white bg-white px-2 text-[13px] font-semibold text-slate-950 transition"
-            >
-              페이지 추가
-            </button>
-          </div>
-
           <div className="project-list-table overflow-visible bg-transparent">
             <div className="overflow-visible">
               <table className="w-full table-fixed text-left">
               <colgroup>
-                <col className="w-[64px]" />
+                <col className="w-[52px]" />
                 <col className="w-[23%]" />
                 <col className="w-[34%]" />
                 <col className="w-[120px]" />
@@ -890,9 +873,9 @@ export function OrganizationModelDetailPanel({
                     <button
                       type="button"
                       onClick={() => handleSiteSort("targetType")}
-                      className="flex h-8 w-full items-center justify-center px-2 text-center cursor-pointer select-none"
+                      className="flex h-8 w-full items-center justify-center px-0 text-center cursor-pointer select-none"
                     >
-                      <span className="relative inline-flex items-center justify-center">
+                      <span className="relative inline-flex -translate-x-3 items-center justify-center">
                         종류
                         {getCenteredSiteSortIndicator("targetType")}
                       </span>
@@ -902,7 +885,7 @@ export function OrganizationModelDetailPanel({
                     <button
                       type="button"
                       onClick={() => handleSiteSort("siteName")}
-                      className="flex h-8 w-full items-center gap-1 px-4 text-left cursor-pointer select-none"
+                      className="-ml-5 flex h-8 w-full items-center gap-0.5 px-0 text-left cursor-pointer select-none"
                     >
                       페이지 이름
                       {getSiteSortIndicator("siteName")}
@@ -926,7 +909,7 @@ export function OrganizationModelDetailPanel({
                     <button
                       type="button"
                       onClick={() => handleSiteSort("updatedAt")}
-                      className="flex h-8 w-full items-center gap-1 px-4 text-left cursor-pointer select-none"
+                      className="flex h-8 w-full items-center gap-0.5 px-4 text-left cursor-pointer select-none"
                     >
                       최근 완료 시각
                       {getSiteSortIndicator("updatedAt")}
@@ -951,8 +934,8 @@ export function OrganizationModelDetailPanel({
                         index !== sortedSiteRows.length - 1 ? "border-b border-slate-200/80" : ""
                       }`}
                     >
-                      <td className="relative px-2 py-1.5 align-middle text-slate-600">
-                        <div className="group/target-type relative flex items-center justify-center">
+                      <td className="relative px-0 py-1.5 align-middle text-slate-600">
+                        <div className="group/target-type relative flex -translate-x-3 items-center justify-center">
                           <span
                             className={`inline-flex h-7 w-7 items-center justify-center rounded-full transition ${
                               isDarkMode ? "group-hover/target-type:bg-white/[0.06]" : "group-hover/target-type:bg-slate-100"
@@ -962,16 +945,15 @@ export function OrganizationModelDetailPanel({
                             {renderTargetTypeIcon(row.targetType)}
                           </span>
                           <span
-                            className={`pointer-events-none absolute left-1/2 top-full z-30 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium opacity-0 transition group-hover/target-type:opacity-100 ${
-                              isDarkMode ? "bg-[#11141a] text-white" : "border border-slate-200 bg-white text-slate-900"
-                            }`}
+                            data-tooltip-tone={isDarkMode ? "dark" : "light"}
+                            className="project-table-tooltip invisible pointer-events-none absolute left-1/2 top-full z-[9999] mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium group-hover/target-type:visible"
                           >
                             {getTargetTypeInfo(row.targetType)}
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-1.5 align-middle">
-                        <div className="min-w-0">
+                      <td className="px-0 py-1.5 align-middle">
+                        <div className="-ml-5 min-w-0">
                           <p className="truncate text-xs font-semibold text-slate-900">{row.name}</p>
                         </div>
                       </td>
@@ -1030,10 +1012,9 @@ export function OrganizationModelDetailPanel({
                                 <Pencil size={14} />
                               </button>
                               <span
-                                className={`pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium opacity-0 transition group-hover/action:opacity-100 ${
+                                data-tooltip-tone={isDarkMode ? "dark" : "light"}
+                                className={`project-table-tooltip invisible pointer-events-none absolute left-1/2 z-[9999] -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium group-hover/action:visible ${
                                   index === 0 ? "top-full mt-2" : "bottom-full mb-2"
-                                } ${
-                                  isDarkMode ? "bg-[#11141a] text-white" : "border border-slate-200 bg-white text-slate-900"
                                 }`}
                               >
                                 수정
@@ -1059,10 +1040,9 @@ export function OrganizationModelDetailPanel({
                                 <Trash2 size={14} className={isDarkMode ? "text-rose-400" : "text-red-600"} />
                               </button>
                               <span
-                                className={`pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium opacity-0 transition group-hover/action:opacity-100 ${
+                                data-tooltip-tone={isDarkMode ? "dark" : "light"}
+                                className={`project-table-tooltip invisible pointer-events-none absolute left-1/2 z-[9999] -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium group-hover/action:visible ${
                                   index === 0 ? "top-full mt-2" : "bottom-full mb-2"
-                                } ${
-                                  isDarkMode ? "bg-[#11141a] text-white" : "border border-slate-200 bg-white text-slate-900"
                                 }`}
                               >
                                 제거

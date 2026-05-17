@@ -6,11 +6,11 @@ type SummaryStatCardsProps = {
 
 export function SummaryStatCards({ items }: SummaryStatCardsProps) {
   return (
-    <div className="grid h-[374px] w-[148px] min-h-0 grid-rows-3 gap-3 justify-self-start">
+    <div className="grid min-h-0 grid-cols-3 gap-3">
       {items.map((item) => (
         <div
           key={item.label}
-          className="dashboard-card flex min-h-0 flex-col justify-between rounded-xl border border-slate-200 bg-slate-100 px-4 py-4"
+          className="flex min-h-[112px] flex-col justify-between rounded-xl bg-white px-4 py-4"
         >
           <p className="text-xs font-semibold text-[#8a94a6]">{item.label}</p>
           <div className="flex items-end justify-end gap-1">
