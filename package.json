@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "mock:server": "node mock-server/server.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
