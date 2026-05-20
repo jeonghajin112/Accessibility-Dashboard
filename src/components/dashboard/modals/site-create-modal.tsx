@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { getApiErrorMessage } from "@/services/backend-api";
 import type {
   CreateEvaluationTargetInput as CreateEvaluationTargetModelInput,
   OrganizationModel
@@ -60,7 +61,7 @@ export function SiteCreateModal({
       setBaseUrl("");
       onClose();
     } catch (error) {
-      setSiteCreateError(error instanceof Error ? error.message : "페이지 추가 중 오류가 발생했습니다.");
+      setSiteCreateError(getApiErrorMessage(error, "페이지 추가 중 오류가 발생했습니다."));
     } finally {
       setIsSubmittingSite(false);
     }

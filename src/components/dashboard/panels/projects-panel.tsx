@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Trash2 } from "lucide-react
 import { useState } from "react";
 import { createPortal } from "react-dom";
 
+import { getApiErrorMessage } from "@/services/backend-api";
 import type { OrganizationModel } from "@/types/accessibility-domain";
 
 import { PanelMessage } from "../shared/display";
@@ -181,7 +182,7 @@ export function OrganizationModelsPanel({
       setEditOrganizationModelName("");
       setEditOrganizationModelDescription("");
     } catch (error) {
-      setEditOrganizationModelError(error instanceof Error ? error.message : "프로젝트 수정 중 오류가 발생했습니다.");
+      setEditOrganizationModelError(getApiErrorMessage(error, "프로젝트 수정 중 오류가 발생했습니다."));
     } finally {
       setIsSavingOrganizationModel(false);
     }
@@ -199,7 +200,7 @@ export function OrganizationModelsPanel({
       await onDeleteOrganizationModel(deletingOrganizationModel.id);
       setDeletingOrganizationModel(null);
     } catch (error) {
-      setDeleteOrganizationModelError(error instanceof Error ? error.message : "프로젝트 제거 중 오류가 발생했습니다.");
+      setDeleteOrganizationModelError(getApiErrorMessage(error, "프로젝트 제거 중 오류가 발생했습니다."));
     } finally {
       setIsDeletingOrganizationModel(false);
     }

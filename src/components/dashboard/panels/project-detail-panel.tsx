@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
+import { getApiErrorMessage } from "@/services/backend-api";
 import type {
   AnalysisResult,
   EvaluationTargetModel,
@@ -522,7 +523,7 @@ export function OrganizationModelDetailPanel({
 
       closeEditEvaluationTargetModel();
     } catch (error) {
-      setEditEvaluationTargetError(error instanceof Error ? error.message : "페이지 수정 중 오류가 발생했습니다.");
+      setEditEvaluationTargetError(getApiErrorMessage(error, "페이지 수정 중 오류가 발생했습니다."));
     } finally {
       setIsSavingEvaluationTarget(false);
     }
@@ -544,7 +545,7 @@ export function OrganizationModelDetailPanel({
 
       closeDeleteEvaluationTargetModel();
     } catch (error) {
-      setDeleteEvaluationTargetError(error instanceof Error ? error.message : "페이지 제거 중 오류가 발생했습니다.");
+      setDeleteEvaluationTargetError(getApiErrorMessage(error, "페이지 제거 중 오류가 발생했습니다."));
     } finally {
       setIsDeletingEvaluationTarget(false);
     }
