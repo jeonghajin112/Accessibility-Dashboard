@@ -4,6 +4,7 @@ import { fetchDashboardViewModel, getApiErrorMessage, isAbortError } from "@/ser
 import type { DashboardViewModel } from "@/types/accessibility-domain";
 
 type LoadDashboardOptions = {
+  awaitInFlight?: boolean;
   showLoading?: boolean;
   clearOnError?: boolean;
   signal?: AbortSignal;
@@ -21,51 +22,58 @@ export function useDashboardData({
   const [dashboardError, setDashboardError] = useState("");
   const isRefreshingRef = useRef(false);
   const isBootstrappedRef = useRef(false);
+  const activeLoadPromiseRef = useRef<Promise<DashboardViewModel | null> | null>(null);
 
   const loadDashboard = useCallback<LoadDashboard>(
-    async ({ showLoading = false, clearOnError = false, signal } = {}) => {
+    ({ awaitInFlight = false, showLoading = false, clearOnError = false, signal } = {}) => {
       if (isRefreshingRef.current && !showLoading) {
-        return null;
+        return awaitInFlight ? activeLoadPromiseRef.current ?? Promise.resolve(null) : Promise.resolve(null);
       }
+
       isRefreshingRef.current = true;
-      let didAbort = false;
-
-      if (showLoading) {
-        setIsDashboardLoading(true);
-      }
-
-      try {
-        const nextData = await fetchDashboardViewModel(signal);
-        setDashboardData(nextData);
-        setDashboardError("");
-        return nextData;
-      } catch (error) {
-        if (isAbortError(error)) {
-          didAbort = true;
-          return null;
-        }
-
-        setDashboardError(getApiErrorMessage(error, "대시보드 데이터를 가져오지 못했습니다."));
-        if (clearOnError) {
-          setDashboardData(null);
-        }
-        return null;
-      } finally {
-        isRefreshingRef.current = false;
-
-        if (didAbort) {
-          return null;
-        }
-
-        if (showLoading && !isBootstrappedRef.current) {
-          isBootstrappedRef.current = true;
-          onBootstrapComplete?.();
-        }
+      let loadPromise!: Promise<DashboardViewModel | null>;
+      loadPromise = (async (): Promise<DashboardViewModel | null> => {
+        let didAbort = false;
 
         if (showLoading) {
-          setIsDashboardLoading(false);
+          setIsDashboardLoading(true);
         }
-      }
+
+        try {
+          const nextData = await fetchDashboardViewModel(signal);
+          setDashboardData(nextData);
+          setDashboardError("");
+          return nextData;
+        } catch (error) {
+          if (isAbortError(error)) {
+            didAbort = true;
+            return null;
+          }
+
+          setDashboardError(getApiErrorMessage(error, "대시보드 데이터를 가져오지 못했습니다."));
+          if (clearOnError) {
+            setDashboardData(null);
+          }
+          return null;
+        } finally {
+          isRefreshingRef.current = false;
+          if (activeLoadPromiseRef.current === loadPromise) {
+            activeLoadPromiseRef.current = null;
+          }
+
+          if (!didAbort && showLoading && !isBootstrappedRef.current) {
+            isBootstrappedRef.current = true;
+            onBootstrapComplete?.();
+          }
+
+          if (showLoading) {
+            setIsDashboardLoading(false);
+          }
+        }
+      })();
+
+      activeLoadPromiseRef.current = loadPromise;
+      return loadPromise;
     },
     [onBootstrapComplete]
   );

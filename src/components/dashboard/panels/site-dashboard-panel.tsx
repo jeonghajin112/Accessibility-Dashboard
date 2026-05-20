@@ -132,7 +132,7 @@ function buildSummaryItems({
 }): SiteSummaryItem[] {
   return [
     {
-      label: "평균 점수",
+      label: "최신 점수",
       value: latestCompletedScoreItem ? `${Math.round(latestCompletedScoreItem.scoreResult.totalScore)}` : "-",
       unit: "점"
     },

@@ -453,9 +453,9 @@ export function OrganizationModelsPanel({
                   isDarkMode ? "border-[#23272f] bg-[#0C0E11]" : "border-slate-200 bg-white"
                 }`}
               >
-                <h3 id="project-delete-title" className="text-lg font-semibold text-slate-900">프로젝트 제거</h3>
-                <p id="project-delete-description" className="mt-2 text-sm text-slate-500">
-                  <span className="font-medium text-slate-700">{deletingOrganizationModel.name}</span> 프로젝트를 제거하시겠습니까?
+                <h3 id="project-delete-title" className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>프로젝트 제거</h3>
+                <p id="project-delete-description" className={`mt-2 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  <span className={`font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>{deletingOrganizationModel.name}</span> 프로젝트를 제거하시겠습니까?
                 </p>
 
                 {deleteOrganizationModelError.length > 0 && (
@@ -467,7 +467,11 @@ export function OrganizationModelsPanel({
                     type="button"
                     disabled={isDeletingOrganizationModel}
                     onClick={closeDeleteOrganizationModel}
-                    className="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    className={`inline-flex h-9 items-center rounded-lg border px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 ${
+                      isDarkMode
+                        ? "border-[#23272f] bg-slate-900 text-slate-200 hover:bg-slate-800"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                   >
                     아니요
                   </button>

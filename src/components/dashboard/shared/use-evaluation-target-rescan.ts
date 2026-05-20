@@ -55,7 +55,7 @@ export function useEvaluationTargetRescan({
           await wait(RESCAN_RESULT_POLL_INTERVAL_MS);
         }
 
-        const refreshedData = await loadDashboard({ clearOnError: false });
+        const refreshedData = await loadDashboard({ awaitInFlight: true, clearOnError: false });
         const latestRequest =
           createdRequestId === null
             ? getLatestRequestForTarget(refreshedData ?? null, targetId)
